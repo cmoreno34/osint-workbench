@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Live OSINT Intelligence Workbench | IE Universidad</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:system-ui,-apple-system,sans-serif;background:#0a0f1a;color:#c4cdd8;min-height:100vh}
+.header{background:#0f1629;border-bottom:1px solid #1c2541;padding:16px 24px}
+.logo{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.logo-icon{width:36px;height:36px;border-radius:9px;background:linear-gradient(135deg,#4f8ff7,#a47cf3);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#fff}
+.logo h1{font-size:17px;font-weight:700;color:#edf2f7}
+.logo p{font-size:10px;color:#4a5568}
+.search-row{display:flex;gap:8px}
+.search-input{flex:1;background:#111827;border:1px solid #2d3a5c;border-radius:8px;padding:11px 14px;font-size:13px;color:#edf2f7;outline:none;font-family:inherit}
+.search-input:focus{border-color:#4f8ff7}
+.btn-fetch{background:#22c55e;border:none;border-radius:8px;padding:0 22px;font-size:13px;color:#fff;cursor:pointer;font-weight:600;white-space:nowrap}
+.btn-fetch:disabled{background:#1c2541;cursor:default;opacity:.5}
+.quick-row{display:flex;gap:5px;margin-top:10px;flex-wrap:wrap;align-items:center}
+.quick-label{font-size:10px;color:#4a5568}
+.quick-btn{background:transparent;border:1px solid #1c2541;border-radius:10px;padding:3px 10px;font-size:10px;color:#718096;cursor:pointer;font-family:inherit}
+.quick-btn:hover{border-color:#4f8ff7;color:#4f8ff7}
+.tabs{display:flex;border-bottom:1px solid #1c2541}
+.tab{flex:1;background:#0f1629;border:none;border-bottom:2px solid transparent;padding:11px;font-size:12px;color:#4a5568;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px}
+.tab.active{background:#0a0f1a;font-weight:700}
+.tab .count{border-radius:6px;padding:1px 6px;font-size:10px}
+.content{padding:18px 24px;max-width:1200px;margin:0 auto}
+.api-bar{background:#111827;border:1px solid #1c2541;border-radius:8px;padding:12px 16px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+.api-name{font-size:13px;font-weight:700}
+.api-badge{background:#166534;border-radius:5px;padding:2px 7px;font-size:9px;color:#bbf7d0;margin-left:6px}
+.api-desc{font-size:10px;color:#4a5568;margin-top:3px}
+.btn-sm{border:1px solid #2d3a5c;border-radius:6px;padding:6px 12px;font-size:10px;cursor:pointer;font-family:inherit;background:#111827;color:#718096}
+.btn-sm.active-code{background:#2d1b69;color:#c4b5fd}
+.btn-sm.active-json{background:#1c2541;color:#4f8ff7}
+.code-panel{background:#161b2e;border:1px solid #7c3aed33;border-radius:8px;padding:14px;margin-bottom:14px}
+.code-title{font-size:11px;font-weight:600;color:#c4b5fd;margin-bottom:10px;display:flex;justify-content:space-between}
+.code-copy{background:#7c3aed22;border:1px solid #7c3aed44;border-radius:4px;padding:3px 8px;font-size:9px;color:#c4b5fd;cursor:pointer;font-family:inherit}
+.code-pre{font-size:11px;line-height:1.6;color:#d1d5db;white-space:pre-wrap;overflow:auto;max-height:260px;font-family:'Courier New',monospace}
+.json-panel{background:#161b2e;border:1px solid #2d3a5c;border-radius:8px;padding:14px;margin-bottom:14px;max-height:240px;overflow:auto}
+.json-title{font-size:10px;font-weight:600;color:#4f8ff7}
+.json-pre{font-size:9px;line-height:1.4;color:#718096;white-space:pre-wrap;margin-top:6px;font-family:'Courier New',monospace}
+.card{background:#111827;border:1px solid #1c2541;border-radius:8px;padding:13px 16px;margin-bottom:6px;transition:border .2s}
+.card:hover{border-color:#2d3a5c}
+.card-head{display:flex;justify-content:space-between;margin-bottom:4px;flex-wrap:wrap;gap:4px}
+.mono{font-family:'Courier New',monospace}
+.amount{font-size:15px;font-weight:700;font-family:'Courier New',monospace}
+.text-xs{font-size:10px}.text-sm{font-size:11px}.text-base{font-size:12px}
+.text-muted{color:#4a5568}.text-light{color:#a0aec0}.text-bright{color:#edf2f7}
+.empty{text-align:center;padding:50px 20px}
+.empty-icon{font-size:40px;opacity:.2;margin-bottom:10px}
+.error-box{background:#2d1215;border:1px solid #7f1d1d;border-radius:8px;padding:12px 16px;margin-bottom:14px}
+.ai-box{margin-top:16px;background:#111827;border:1px solid #1c2541;border-radius:8px;padding:14px 16px}
+.ai-head{display:flex;justify-content:space-between;align-items:center}
+.ai-title{font-size:12px;font-weight:700;color:#c4b5fd}
+.btn-ai{background:#7c3aed18;border:1px solid #7c3aed44;border-radius:6px;padding:6px 14px;font-size:11px;color:#c4b5fd;cursor:pointer;font-weight:600;font-family:inherit}
+.ai-result{background:#161b2e;border-radius:6px;padding:14px;border-left:3px solid #7c3aed;margin-top:12px}
+.ai-text{font-size:11.5px;line-height:1.65;color:#c4cdd8;white-space:pre-wrap;font-family:system-ui,sans-serif}
+.footer{border-top:1px solid #1c2541;padding:10px 24px;display:flex;justify-content:space-between;font-size:9px;color:#2d3a5c;margin-top:30px}
+.form-badge{display:inline-block;background:#854d0e;color:#fef3c7;border-radius:3px;padding:1px 7px;font-size:10px;font-weight:700;margin-right:6px}
+.loading{text-align:center;padding:40px}
+.status{margin-left:auto;background:#1c2541;border:1px solid #2d3a5c;border-radius:10px;padding:3px 10px;font-size:10px;color:#4f8ff7}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">
+    <div class="logo-icon">CI</div>
+    <div>
+      <h1>Live OSINT Intelligence Workbench</h1>
+      <p>Real-time data from public APIs &middot; IE Universidad &middot; Corporate Intelligence Course</p>
+    </div>
+    <span class="status" id="statusBadge" style="display:none"></span>
+  </div>
+  <div class="search-row">
+    <input class="search-input" id="searchInput" placeholder='Enter company: &quot;Raytheon&quot;, &quot;Palantir&quot;, &quot;Lockheed Martin&quot;...' />
+    <button class="btn-fetch" id="fetchBtn" onclick="fetchAll()">&#9889; Fetch All</button>
+  </div>
+  <div class="quick-row">
+    <span class="quick-label">Try:</span>
+  </div>
+</div>
+
+<div class="tabs" id="tabBar"></div>
+<div class="content" id="mainContent"></div>
+
+<div class="footer">
+  <span>Corporate Intelligence &middot; IE Universidad &middot; Prof. C&eacute;sar</span>
+  <span>All data from public government APIs &middot; No API keys required</span>
+</div>
+
+<script>
+// ═══ PRE-LOADED DATA (fetched from real APIs on 2026-03-01) ═══
+var PRELOADED_CONTRACTS = {"Raytheon":[{"id":"N0001918C1021","recipient":"RTX CORPORATION","amount":8688654906.89,"agency":"Department of Defense","subAgency":"Department of the Navy","type":null,"desc":"LOT 12 AAC LONG LEAD FOR PROPULSION SYSTEMS","start":"2018-03-23","end":"2024-12-30"},{"id":"N0001920C0011","recipient":"RTX CORPORATION","amount":7498943172.37,"agency":"Department of Defense","subAgency":"Department of the Navy","type":null,"desc":"LOT 15 FMS-1 F135 CTOL PROP SYSTEM","start":"2020-03-23","end":"2030-10-15"},{"id":"N0002405C5346","recipient":"RAYTHEON COMPANY","amount":5668542889.12,"agency":"Department of Defense","subAgency":"Department of the Navy","type":null,"desc":"","start":"2005-05-25","end":"2019-09-29"},{"id":"W31P4Q15C0022","recipient":"RAYTHEON COMPANY","amount":5608431752.51,"agency":"Department of Defense","subAgency":"Department of the Army","type":null,"desc":"TEN FIRE UNITS FOR QATAR","start":"2014-12-19","end":"2025-05-31"},{"id":"FA880710C0001","recipient":"RAYTHEON COMPANY","amount":4418363964.68,"agency":"Department of Defense","subAgency":"Department of the Air Force","type":null,"desc":"GPS ADVANCED CONTROL SEGMENT (OCX) PHASE B BLOCKS 1 AND 2","start":"2010-02-25","end":"2026-03-31"},{"id":"FA861108C2896","recipient":"RTX CORPORATION","amount":3648685783.01,"agency":"Department of Defense","subAgency":"Department of the Air Force","type":null,"desc":"F119 ENGINE LONG TERM SUSTAINMENT PROGRAM FOR THE RAPTOR ENGINE (SPARE)","start":"2008-01-01","end":"2022-05-31"},{"id":"N0002422C5500","recipient":"RAYTHEON COMPANY","amount":3265910249.19,"agency":"Department of Defense","subAgency":"Department of the Navy","type":null,"desc":"AN/SPY-6(V) HARDWARE PRODUCTION","start":"2022-03-31","end":"2028-09-30"},{"id":"0002","recipient":"RAYTHEON COMPANY","amount":2986266447.12,"agency":"Department of Defense","subAgency":"Department of the Army","type":null,"desc":"PREDOMINANT - PATRIOT UAE","start":"2008-12-17","end":"2019-04-30"}],"Palantir":[{"id":"W911QX24F0053","recipient":"PALANTIR USG INC","amount":292680689.24,"agency":"Department of Defense","subAgency":"Department of the Army","type":null,"desc":"TASK ORDER #1 FOR MAVEN SMART SYSTEM - USER INTERFACE/USER EXPERIENCE (UI/UX) PROTOTYPE","start":"2024-06-18","end":"2026-05-31"},{"id":"H9222216C0078","recipient":"PALANTIR TECHNOLOGIES INC.","amount":275959237.71,"agency":"Department of Defense","subAgency":"U.S. Special Operations Command","type":null,"desc":"PALANTIR GOTHAM MONTHLY TERM LICENSES","start":"2016-05-24","end":"2021-05-25"},{"id":"W9128Z26FA001","recipient":"PALANTIR USG INC","amount":226999481.7,"agency":"Department of Defense","subAgency":"Department of the Army","type":null,"desc":"CDAO MSS TASK ORDER OFF OF CONTRACT W519TC25D0039","start":"2025-10-15","end":"2029-05-31"},{"id":"FA880621C0010","recipient":"PALANTIR USG INC","amount":195724055.5,"agency":"Department of Defense","subAgency":"Department of the Air Force","type":null,"desc":"PROVIDES ACCESS TO AGILE, SCALABLE DATA PLATFORM WITH ROBUST DATA STREAMING,STORAGE TECHNOLOGIES, COMMERCIAL DATA PLATFORM WILL BE USED TO COORDINATE ","start":"2021-05-01","end":"2023-06-30"},{"id":"70CTD022FR0000170","recipient":"PALANTIR TECHNOLOGIES INC.","amount":139314020.61,"agency":"Department of Homeland Security","subAgency":"U.S. Immigration and Customs Enforcement","type":null,"desc":"INVESTIGATIVE CASE MANAGEMENT (ICM) OPERATIONS AND MAINTENANCE (O&M) SUPPORT SERVICES AND CUSTOM ENHANCEMENTS","start":"2022-09-26","end":"2026-04-04"},{"id":"FA880623C0002","recipient":"PALANTIR USG INC","amount":130042463.0,"agency":"Department of Defense","subAgency":"Department of the Air Force","type":null,"desc":"ESTABLISH BASIC LETTER CONTRACT FOR COMMERCIAL DATA AS A SERVE PLATFORM.","start":"2023-06-16","end":"2025-06-15"},{"id":"W519TC25C0008","recipient":"PALANTIR USG INC","amount":103418555.9,"agency":"Department of Defense","subAgency":"Department of the Army","type":null,"desc":"SOFTWARE AS A SERVICE (SAAS) MODEL OF ARMY VANTAGE ON BEHALF OF PEO EIS, PDM ADP. ARMY VANTAGE IS THE ARMY'S DATA-DRIVEN OPERATIONS AND DECISION-MAKIN","start":"2024-12-13","end":"2025-12-15"},{"id":"36C10B21F0353","recipient":"PALANTIR TECHNOLOGIES INC.","amount":93288095.85,"agency":"Department of Veterans Affairs","subAgency":"Department of Veterans Affairs","type":null,"desc":"SAAS SOLUTION.","start":"2021-09-30","end":"2025-09-29"}],"Lockheed Martin":[{"id":"DEAC0494AL85000","recipient":"LOCKHEED MARTIN CORP","amount":48066473048.89,"agency":"Department of Energy","subAgency":"Department of Energy","type":null,"desc":"","start":"1993-10-15","end":"2017-04-30"},{"id":"N0001917C0001","recipient":"LOCKHEED MARTIN CORPORATION","amount":35135514910.2,"agency":"Department of Defense","subAgency":"Department of the Navy","type":null,"desc":"LRIP LOT 12 ADVANCE ACQUISITION CONTRACT","start":"2017-11-17","end":"2031-03-31"},{"id":"N0001902C3002","recipient":"LOCKHEED MARTIN CORPORATION","amount":34173959111.96,"agency":"Department of Defense","subAgency":"Defense Contract Management Agency","type":null,"desc":"200204!008532!1700!AF600 !NAVAL AIR SYSTEMS COMMAND       !N0001902C3002  !A!N! !N!                   !20011026!20120430!008016958!008016958!834951691","start":"2001-10-26","end":"2022-12-16"},{"id":"N0001920C0009","recipient":"LOCKHEED MARTIN CORPORATION","amount":30113345947.93,"agency":"Department of Defense","subAgency":"Defense Contract Management Agency","type":null,"desc":"THE PURPOSE OF THIS MODIFICATION IS TO AWARD F-35A LRIP 15 USAF  AIRCRAFT* LONG LEAD FUNDING","start":"2019-11-26","end":"2028-06-01"},{"id":"N0001923C0003","recipient":"LOCKHEED MARTIN CORPORATION","amount":24499534829.0,"agency":"Department of Defense","subAgency":"Department of the Navy","type":null,"desc":"THE PURPOSE OF THIS CONTRACT IS TO AWARD LONG LEAD FUNDING FOR F-35A, F-35B, AND F-35C AIRCRAFT FOR U.S. SERVICES, NON-DOD PARTNERS, AND FMS CUSTOMERS","start":"2022-12-23","end":"2030-09-30"},{"id":"DEAC0584OR21400","recipient":"LOCKHEED MARTIN SERVICES, LLC","amount":20646113720.09,"agency":"Department of Energy","subAgency":"Department of Energy","type":null,"desc":"MANAGEMENT AND OPERATION OF Y-12 PLANT AND OTHER PROGRAMS","start":"1984-04-30","end":"2027-02-28"},{"id":"NNJ06TA25C","recipient":"LOCKHEED MARTIN CORP","amount":15502629330.37,"agency":"National Aeronautics and Space Administration","subAgency":"National Aeronautics and Space Administration","type":null,"desc":"TAS::80 0124::TAS DESIGN, DEVELOPMENT, TEST&EVALUATION OF PROJECT ORION","start":"2006-09-06","end":"2026-09-30"},{"id":"N0001916C0033","recipient":"LOCKHEED MARTIN CORPORATION","amount":12269145508.23,"agency":"Department of Defense","subAgency":"Department of the Navy","type":null,"desc":"LRIP 11 AAC","start":"2015-12-21","end":"2031-03-31"}],"CrowdStrike":[{"id":"19AQMM19P2246","recipient":"CROWDSTRIKE INC","amount":0,"agency":"Department of State","subAgency":"Department of State","type":null,"desc":"INCIDENT RESPONSE SERVICES","start":"2019-09-30","end":"2022-09-29"}],"Booz Allen":[{"id":"47QFCA21F0018","recipient":"BOOZ ALLEN HAMILTON INC","amount":1379603153.12,"agency":"General Services Administration","subAgency":"Federal Acquisition Service","type":null,"desc":"TASK ORDER (TO) 47QFCA21F0018 IS HEREBY AWARDED TO BOOZ ALLEN HAMILTON, INC. (BAH) TO PROVIDE ENTERPRISE LEVEL DATA TO THE OUSD(C), AND ITS STRATEGIC ","start":"2021-03-09","end":"2025-02-15"},{"id":"36C10B21N10070021","recipient":"BOOZ ALLEN HAMILTON INC","amount":1365285599.63,"agency":"Department of Veterans Affairs","subAgency":"Department of Veterans Affairs","type":null,"desc":"TRANSFORMATION TWENTY-ONE TOTAL TECHNOLOGY NEXT GENERATION (T4NG) TASK ORDER - BENEFITS INTEGRATED DELIVERY","start":"2021-05-17","end":"2026-05-18"},{"id":"GSQ0015AJ0047","recipient":"BOOZ ALLEN HAMILTON INC","amount":1173611155.42,"agency":"General Services Administration","subAgency":"Federal Acquisition Service","type":null,"desc":"IGF::OT::IGF","start":"2015-09-23","end":"2021-03-22"},{"id":"36C10B21N10150056","recipient":"BOOZ ALLEN HAMILTON INC","amount":1139008033.13,"agency":"Department of Veterans Affairs","subAgency":"Department of Veterans Affairs","type":null,"desc":"PRODUCT AND TECHNOLOGY ECOSYSTEM MANAGEMENT SERVICES (PTEMS)WHICH INCLUDES PRODUCT DELIVERY AND LIFECYCLE MANAGEMENT TO TRANSFORM VA BY TAPPING INTO E","start":"2021-01-08","end":"2025-04-15"},{"id":"47QFCA20F0014","recipient":"BOOZ ALLEN HAMILTON INC","amount":1070585831.99,"agency":"General Services Administration","subAgency":"Federal Acquisition Service","type":null,"desc":"THE PURPOSE OF THIS EFFORT IS TO ACQUIRE CONTRACTOR SERVICES TO PROVIDE REAL-TIME, COMPREHENSIVE THREAT ANALYSIS AND ASSESSMENT, TRAINING DEVELOPMENT ","start":"2020-06-26","end":"2025-06-25"},{"id":"47QFCA22F0047","recipient":"BOOZ ALLEN HAMILTON INC","amount":1000052170.69,"agency":"General Services Administration","subAgency":"Federal Acquisition Service","type":null,"desc":"TASK ORDER AWARD","start":"2022-09-06","end":"2026-09-05"},{"id":"36C10B22N10070023","recipient":"BOOZ ALLEN HAMILTON INC","amount":859686306.3,"agency":"Department of Veterans Affairs","subAgency":"Department of Veterans Affairs","type":null,"desc":"NEW TO - EHRM PMO IO SUPPORT","start":"2022-09-28","end":"2026-01-15"},{"id":"36C10B19N10070015","recipient":"BOOZ ALLEN HAMILTON INC","amount":826583511.86,"agency":"Department of Veterans Affairs","subAgency":"Department of Veterans Affairs","type":null,"desc":"IGF::OT::IGF  INFORMATION TECHNOLOGY OPERATIONS AND SERVICES TRANSFORMATION SUPPORT SERVICES","start":"2019-05-17","end":"2025-01-22"}],"Northrop Grumman":[{"id":"FA821920C0006","recipient":"NORTHROP GRUMMAN SYSTEMS CORP","amount":10819559923.19,"agency":"Department of Defense","subAgency":"Department of the Air Force","type":null,"desc":"GROUND-BASED STRATEGIC DETERRENT (GBSD) ENGINEERING AND MANUFACTURING DEVELOPMENT (EMD) AND EARLY PRODUCTION AND DEPLOYMENT (P&D)","start":"2020-09-08","end":"2029-03-10"},{"id":"F4261098C0001","recipient":"NORTHROP GRUMMAN SYSTEMS CORPORATION","amount":10009419769.13,"agency":"Department of Defense","subAgency":"Department of the Air Force","type":null,"desc":"200506!000026!5700!FA8214!OO-ALC/PKME/LMKE                !F4261098C0001  !A!N! !Y!             !P01502!20041213!20050701!001563738!004179453!01643555","start":"1998-07-01","end":"2025-11-30"},{"id":"N0001918C1037","recipient":"NORTHROP GRUMMAN SYSTEMS CORPORATION","amount":8452894780.67,"agency":"Department of Defense","subAgency":"Department of the Navy","type":null,"desc":"E-2D ADVANCED HAWKEYE AIRCRAFT (FRP-7)","start":"2018-02-15","end":"2030-02-01"},{"id":"N0001913C9999","recipient":"NORTHROP GRUMMAN SYSTEMS CORPORATION","amount":5374740355.12,"agency":"Department of Defense","subAgency":"Department of the Navy","type":null,"desc":"E-2D ADVANCED HAWKEYE AIRCRAFT (FRP-2)","start":"2013-05-13","end":"2026-12-31"},{"id":"NNM07AA75C","recipient":"NORTHROP GRUMMAN SYSTEMS CORPORATION","amount":4418784857.0,"agency":"National Aeronautics and Space Administration","subAgency":"National Aeronautics and Space Administration","type":null,"desc":"FIRST DDT AND E, ARES I-X, AND FLIGHT TESTS.  FIRST STAGE WILL BE A FIVE SEGMENT, SOLID ROCKET BOOSTER DERIVED FROM THE SPACE SHUTTLE PROGRAM (SSP) SO","start":"2006-04-17","end":"2026-06-30"},{"id":"F0470102C0502","recipient":"NORTHROP GRUMMAN SYSTEMS CORPORATION","amount":4395003228.74,"agency":"Department of Defense","subAgency":"Defense Contract Management Agency","type":null,"desc":"","start":"2002-08-23","end":"2018-09-30"},{"id":"GSFC0200211DNAS502200","recipient":"NORTHROP GRUMMAN SYSTEMS CORPORATION","amount":4345585999.01,"agency":"National Aeronautics and Space Administration","subAgency":"National Aeronautics and Space Administration","type":null,"desc":"THE JAMES WEBB SPACE TELESCOPE (JWST) PHASE 2 OBSERVATORY CONTRACTOR SHALL BE RESPONSIBLE FOR PROVIDING THE SPACECRAFT, THE OPTICAL TELESCOPE ELEMENT ","start":"2003-10-01","end":"2022-12-25"},{"id":"N0001908C0023","recipient":"NORTHROP GRUMMAN SYSTEMS CORPORATION","amount":3229122597.17,"agency":"Department of Defense","subAgency":"Department of the Navy","type":null,"desc":"TAS::17 1319::TAS SYSTEM DEVELOPMENT AND DEMONSTRATION","start":"2008-04-22","end":"2023-03-31"}],"L3Harris":[{"id":"F1962802C0010","recipient":"L3HARRIS TECHNOLOGIES, INC.","amount":2226709932.96,"agency":"Department of Defense","subAgency":"Department of the Air Force","type":null,"desc":"200204!000024!5700!GV59 !ESC/NDK !F1962802C0010 !A!N! !N! !20020130!20020930!052819732!052819732!001216845!N!ITT INDUSTRIES, INC , SYSTEMS !4410 E FOU","start":"2002-01-30","end":"2024-09-29"},{"id":"DOCDG133E09CN0094","recipient":"L3HARRIS TECHNOLOGIES, INC.","amount":1826479031.57,"agency":"Department of Commerce","subAgency":"National Oceanic and Atmospheric Administration","type":null,"desc":"THE PURPOSE OF THIS CONTRACT IS TO DEVELOP THE GROUND SYSTEM THAT WILL SUPPORT NOAA S NEXT GENERATION GEOSTATIONARY SATELLITE SERIES, GOES-R. THIS NEW","start":"2009-05-27","end":"2024-01-31"},{"id":"N0002407C6311","recipient":"L3HARRIS NEXGEN COMMUNICATIONS LLC","amount":1573743464.29,"agency":"Department of Defense","subAgency":"Defense Contract Management Agency","type":null,"desc":"BASIC AWARD OF THE 2.1 PRODUCTION SYSTEMS","start":"2007-04-06","end":"2011-12-16"},{"id":"FA882320C0004","recipient":"L3HARRIS TECHNOLOGIES, INC.","amount":1177040708.35,"agency":"Department of Defense","subAgency":"Department of the Air Force","type":null,"desc":"AWARD OF MAINTENANCE OF SPACE SURVEILLENCE AND INTEGRATED CAPABILITIES CONTRACT","start":"2020-02-25","end":"2028-01-31"},{"id":"NNG04HZ07C","recipient":"L3HARRIS TECHNOLOGIES, INC.","amount":1035791035.0,"agency":"National Aeronautics and Space Administration","subAgency":"National Aeronautics and Space Administration","type":null,"desc":"TAS::80 0122::TAS DEVELOPMENT, MANUFACTURING AND SUPPORT TO WEATHER OBSERVING INSTRUMENT","start":"2004-09-15","end":"2039-06-25"},{"id":"NNG10XA06C","recipient":"L3HARRIS TECHNOLOGIES, INC.","amount":814435946.0,"agency":"National Aeronautics and Space Administration","subAgency":"National Aeronautics and Space Administration","type":null,"desc":"ENGINEERING SERVICES AND DEVELOPMENT LEADING TO THE DELIVERY OF THE CROSS TRACK INFRARED SOUNDER (CRIS) INSTRUMENT AND SUPPORT.","start":"2010-09-20","end":"2029-11-10"},{"id":"FA862023F4781","recipient":"L3HARRIS TECHNOLOGIES INTEGRATED SYSTEMS L.P.","amount":660102935.0,"agency":"Department of Defense","subAgency":"Department of the Air Force","type":null,"desc":"BIG SAFARI","start":"2023-02-17","end":"2029-03-31"},{"id":"FA881919C0002","recipient":"L3HARRIS TECHNOLOGIES, INC.","amount":633357266.96,"agency":"Department of Defense","subAgency":"Department of the Air Force","type":null,"desc":"COMBAT MISSION SYSTEMS SUPPORT","start":"2019-01-24","end":"2026-06-30"}],"Leidos":[{"id":"HHSN261200800001E","recipient":"LEIDOS BIOMEDICAL RESEARCH INC","amount":4813063024.9,"agency":"Department of Health and Human Services","subAgency":"National Institutes of Health","type":null,"desc":"TAS::75 0849::TAS  OPER OF GOVT R&D GOCO FACILITIES","start":"2008-09-26","end":"2024-09-06"},{"id":"DEAC0609RL14728","recipient":"MISSION SUPPORT ALLIANCE, LLC","amount":3557405197.21,"agency":"Department of Energy","subAgency":"Department of Energy","type":null,"desc":"MISSION SUPPORT CONTRACT - PROVIDE DIRECT SUPPORT TO DOE-RL, DOE-ORP AND THEIR CONTRACTORS WITH COST-EFFECTIVE INFRASTRUCTURE AND SITE SERVICES INTEGR","start":"2009-04-28","end":"2021-01-24"},{"id":"NSFDACS1219442","recipient":"LEIDOS, INC.","amount":3080759041.82,"agency":"National Science Foundation","subAgency":"National Science Foundation","type":null,"desc":"SCIENCE OPERATION AND MAINTENANCE SUPPORT FOR THE UNITED STATES ANTARCTIC PROGRAM","start":"2011-12-23","end":"2026-09-30"},{"id":"75N91020F00003","recipient":"LEIDOS BIOMEDICAL RESEARCH INC","amount":1775391302.47,"agency":"Department of Health and Human Services","subAgency":"National Institutes of Health","type":null,"desc":"NCI OPERATIONAL TASK ORDER","start":"2020-08-31","end":"2024-09-27"},{"id":"NNJ09HD46C","recipient":"LEIDOS INC","amount":1306805321.14,"agency":"National Aeronautics and Space Administration","subAgency":"National Aeronautics and Space Administration","type":null,"desc":"THE FACILITIES DEVELOPMENT AND OPERATIONS CONTRACT(FDOC) SPECIFIES TECHNICAL, MANAGERIAL, AND ADMINSTRATIVE WORK NEEDED TO ENSURE THE AVAILABLITITY, I","start":"2008-11-07","end":"2018-02-28"},{"id":"28321322FDS030130","recipient":"LEIDOS, INC.","amount":1062905628.31,"agency":"Social Security Administration","subAgency":"Social Security Administration","type":null,"desc":"ITSSC TASK ORDER FOR SYSTEMS","start":"2022-06-30","end":"2026-09-28"},{"id":"47QFCA21C0002","recipient":"LEIDOS, INC.","amount":987222895.0,"agency":"General Services Administration","subAgency":"Federal Acquisition Service","type":null,"desc":"MILITARY AND FAMILY LIFE COUNSELING. REQUIREMENT FOR WORLDWIDE NON MEDICAL CONFIDENTIAL COUNSELING SERVICES.","start":"2021-02-01","end":"2027-01-31"},{"id":"89243318CFE000003","recipient":"LEIDOS, INC.","amount":964758863.0,"agency":"Department of Energy","subAgency":"Department of Energy","type":null,"desc":"RESEARCH SUPPORT SERVICES (RSS)","start":"2018-12-31","end":"2028-12-30"}],"SAIC":[{"id":"HSTS0413CCT3067","recipient":"LEIDOS, INC.","amount":432319916.55,"agency":"Department of Homeland Security","subAgency":"Transportation Security Administration","type":null,"desc":"IGF::OT::IGF CONTRACT FOR INTEGRATED LOGISTICS SUPPORT (ILS) SERVICES IN SUPPORT OF THE OFFICE OF SECURITY CAPABILITIES TO PROVIDE SUSTAINMENT OF PASS","start":"2013-09-19","end":"2018-07-31"},{"id":"HR001112C0086","recipient":"LEIDOS, INC.","amount":104893180.91,"agency":"Department of Defense","subAgency":"Department of the Navy","type":null,"desc":"THE CONTRACTOR WILL PERFORM PHASES 2-4 OF THE ANTI-SUBMARINE WARFARE (ASW) CONTINUOUS TRAIL UNMANNED VESSEL (ACTUV) PROGRAM. THE CONTRACTOR WILL DESIG","start":"2012-08-14","end":"2020-06-30"},{"id":"0058","recipient":"LEIDOS, INC.","amount":90119780.47,"agency":"Department of Defense","subAgency":"Department of the Air Force","type":null,"desc":"","start":"2006-09-15","end":"2012-12-30"},{"id":"0002","recipient":"LEIDOS, INC.","amount":63352661.0,"agency":"Department of Defense","subAgency":"Defense Contract Management Agency","type":null,"desc":"200212!002127!1700!BW21A !NAVAL SURFACE WARFARE CENTER CAR!N0016702D0073  !A!N! !N!0002               !20020930!20050929!054781240!054781240!054781240","start":"2002-09-30","end":"2011-06-30"},{"id":"FA521516F0006","recipient":"LEIDOS, INC.","amount":53156638.19,"agency":"Department of Defense","subAgency":"Department of the Air Force","type":null,"desc":"IGF::CT::IGF PACAF C4ISRO","start":"2016-03-24","end":"2019-09-27"},{"id":"W9124917F0006","recipient":"MOSAIC TECHNOLOGIES GROUP LLC","amount":46175539.79,"agency":"Department of Defense","subAgency":"Department of the Army","type":null,"desc":"IGF::OT::IGF","start":"2017-01-26","end":"2021-06-11"},{"id":"SP470614F0017","recipient":"VAREC INC","amount":43671304.39,"agency":"Department of Defense","subAgency":"Defense Logistics Agency","type":null,"desc":"IGF::OT::IGF OTHER FUNCTIONS","start":"2014-08-30","end":"2019-09-30"},{"id":"FA877319FA023","recipient":"MOSAIC TECHNOLOGIES GROUP LLC","amount":41202283.52,"agency":"Department of Defense","subAgency":"Department of the Air Force","type":null,"desc":"OT ADVISORY AND ASSISTANCE PROFESSIONAL SERVICES IN SUPPORT OF THE 688 OSS","start":"2019-04-28","end":"2025-12-27"}],"BAE Systems":[{"id":"DAAE0703CS023","recipient":"BAE SYSTEMS TACTICAL VEHICLE SYSTEMS LP","amount":7052768924.82,"agency":"Department of Defense","subAgency":"Defense Contract Management Agency","type":null,"desc":"200502!000833!2100!W56HZV!TACOM - WARREN                  !DAAE0703CS023  !A!N! !N!             !P00031!20041101!20081115!557414000!557414000!00793278","start":"2003-04-17","end":"2009-11-30"},{"id":"W56HZV08C0460","recipient":"BAE SYSTEMS TACTICAL VEHICLE SYSTEMS LP","amount":4067162785.79,"agency":"Department of Defense","subAgency":"Defense Contract Management Agency","type":null,"desc":"PROCUREMENT OF 10,000 FAMILY OF MEDIUM TACTICAL VEHICLES.  ALSO ADDING PROGRAM SUPPORT AND FEDERAL RETAIL EXCISE TAX.  THIS ACTION IS BEING ADDED AS A","start":"2008-05-30","end":"2024-09-30"},{"id":"M6785416C0006","recipient":"BAE SYSTEMS LAND AND ARMAMENTS L.P.","amount":3355990689.81,"agency":"Department of Defense","subAgency":"Department of the Navy","type":null,"desc":"IGF::OT::IGF","start":"2015-11-24","end":"2028-06-30"},{"id":"W56HZV17C0001","recipient":"BAE SYSTEMS LAND & ARMAMENTS L.P.","amount":2875130483.43,"agency":"Department of Defense","subAgency":"Department of the Army","type":null,"desc":"LETTER CONTRACT FOR EARLY PROCUREMENT MATERIAL TO SUPPORT THE M109A7/M992A3 VEHICLE PRODUCTION.","start":"2017-03-31","end":"2030-09-30"},{"id":"DAAA0998E0006","recipient":"BAE SYSTEMS ORDNANCE SYSTEMS INC.","amount":2317556244.03,"agency":"Department of Defense","subAgency":"Department of the Army","type":null,"desc":"199812!2100!0747!AA09 !U.S. ARMY INDUSTRIAL OPERATIONS !DAAA0998E0006  !A!*!P00001             !19980929!19991231!289954943!770087872!217304393!N!4038","start":"1999-10-19","end":"2027-03-31"},{"id":"W56HZV23C0024","recipient":"BAE SYSTEMS LAND & ARMAMENTS L.P.","amount":2281164206.0,"agency":"Department of Defense","subAgency":"Department of the Army","type":null,"desc":"EARLY ORDER MATERIAL IN SUPPORT OF THE FUTURE PURCHASE OF 197 AMPVS AND FACILITY CAPACITY EXPANSION EFFORTS TO INCREASE THE AMPV PRODUCTION RATE TO 19","start":"2023-03-03","end":"2028-05-31"},{"id":"FA821413C0001","recipient":"BAE SYSTEMS TECHNOLOGY SOLUTIONS & SERVICES INC.","amount":2183581951.81,"agency":"Department of Defense","subAgency":"Department of the Air Force","type":null,"desc":"IGF::CL::IGF SYSTEMS ENGINEERING, INTEGRATION AND PROGRAM MANAGEMENT SUPPORT FOR THE ICBM SYSTEMS DIRECTORATE.","start":"2013-08-01","end":"2026-07-31"},{"id":"W56HZV15CA001","recipient":"BAE SYSTEMS LAND AND ARMAMENTS L.P.","amount":2006654646.36,"agency":"Department of Defense","subAgency":"Department of the Army","type":null,"desc":"THIS ACTION IS COST PLUS INCENTIVE-FEE (CPIF) 52 MONTH ENGINEERING AND MANUFACTURING DEVELOPMENT CONTRACT, WITH THREE FIXED PRICE INCENTIVE (SUCCESSIV","start":"2014-12-23","end":"2025-09-30"}]};
+var PRELOADED_SEC = {"Raytheon":[{"date":"2023-06-20","form":"8-K","company":"RAYTHEON TECHNOLOGIES CORP  (RTX)  (CIK 0000101829)","location":"Waltham, MA","period":"2023-06-18"},{"date":"2023-04-25","form":"8-K","company":"RAYTHEON TECHNOLOGIES CORP  (RTX)  (CIK 0000101829)","location":"Waltham, MA","period":"2023-04-25"},{"date":"2023-04-25","form":"10-Q","company":"RAYTHEON TECHNOLOGIES CORP  (RTX)  (CIK 0000101829)","location":"Waltham, MA","period":"2023-03-31"},{"date":"2023-02-07","form":"10-K","company":"RAYTHEON TECHNOLOGIES CORP  (RTX)  (CIK 0000101829)","location":"Waltham, MA","period":"2022-12-31"},{"date":"2023-01-24","form":"8-K","company":"RAYTHEON TECHNOLOGIES CORP  (RTX)  (CIK 0000101829)","location":"Waltham, MA","period":"2023-01-24"},{"date":"2023-01-17","form":"8-K","company":"RAYTHEON TECHNOLOGIES CORP  (RTX)  (CIK 0000101829)","location":"Waltham, MA","period":"2023-01-16"},{"date":"2022-10-25","form":"8-K","company":"RAYTHEON TECHNOLOGIES CORP  (RTX)  (CIK 0000101829)","location":"Waltham, MA","period":"2022-10-25"},{"date":"2022-10-25","form":"10-Q","company":"RAYTHEON TECHNOLOGIES CORP  (RTX)  (CIK 0000101829)","location":"Waltham, MA","period":"2022-09-30"}],"Palantir":[{"date":"2025-11-04","form":"10-Q","company":"Palantir Technologies Inc.  (PLTR)  (CIK 0001321655)","location":"Denver, CO","period":"2025-09-30"},{"date":"2025-11-03","form":"8-K","company":"Palantir Technologies Inc.  (PLTR)  (CIK 0001321655)","location":"Denver, CO","period":"2025-11-03"},{"date":"2025-08-05","form":"10-Q","company":"Palantir Technologies Inc.  (PLTR)  (CIK 0001321655)","location":"Denver, CO","period":"2025-06-30"},{"date":"2025-08-04","form":"8-K","company":"Palantir Technologies Inc.  (PLTR)  (CIK 0001321655)","location":"Denver, CO","period":"2025-08-04"},{"date":"2025-05-06","form":"10-Q","company":"Palantir Technologies Inc.  (PLTR)  (CIK 0001321655)","location":"Denver, CO","period":"2025-03-31"},{"date":"2025-05-05","form":"8-K","company":"Palantir Technologies Inc.  (PLTR)  (CIK 0001321655)","location":"Denver, CO","period":"2025-05-05"},{"date":"2025-02-18","form":"10-K","company":"Palantir Technologies Inc.  (PLTR)  (CIK 0001321655)","location":"Denver, CO","period":"2024-12-31"},{"date":"2025-02-03","form":"8-K","company":"Palantir Technologies Inc.  (PLTR)  (CIK 0001321655)","location":"Denver, CO","period":"2025-02-03"}],"Lockheed Martin":[{"date":"2025-10-21","form":"8-K","company":"LOCKHEED MARTIN CORP  (LMT)  (CIK 0000936468)","location":"Bethesda, MD","period":"2025-10-21"},{"date":"2025-07-22","form":"8-K","company":"LOCKHEED MARTIN CORP  (LMT)  (CIK 0000936468)","location":"Bethesda, MD","period":"2025-07-22"},{"date":"2025-04-22","form":"8-K","company":"LOCKHEED MARTIN CORP  (LMT)  (CIK 0000936468)","location":"Bethesda, MD","period":"2025-04-22"},{"date":"2025-04-17","form":"8-K","company":"LOCKHEED MARTIN CORP  (LMT)  (CIK 0000936468)","location":"Bethesda, MD","period":"2025-04-16"},{"date":"2025-01-28","form":"10-K","company":"LOCKHEED MARTIN CORP  (LMT)  (CIK 0000936468)","location":"Bethesda, MD","period":"2024-12-31"},{"date":"2024-12-11","form":"8-K","company":"LOCKHEED MARTIN CORP  (LMT)  (CIK 0000936468)","location":"Bethesda, MD","period":"2024-12-11"},{"date":"2024-10-22","form":"8-K","company":"LOCKHEED MARTIN CORP  (LMT)  (CIK 0000936468)","location":"Bethesda, MD","period":"2024-10-22"},{"date":"2024-07-23","form":"8-K","company":"LOCKHEED MARTIN CORP  (LMT)  (CIK 0000936468)","location":"Bethesda, MD","period":"2024-07-23"}],"CrowdStrike":[{"date":"2025-12-29","form":"8-K","company":"CrowdStrike Holdings, Inc.  (CRWD)  (CIK 0001535527)","location":"Austin, TX","period":"2025-12-22"},{"date":"2025-12-03","form":"10-Q","company":"CrowdStrike Holdings, Inc.  (CRWD)  (CIK 0001535527)","location":"Austin, TX","period":"2025-10-31"},{"date":"2025-12-02","form":"8-K","company":"CrowdStrike Holdings, Inc.  (CRWD)  (CIK 0001535527)","location":"Austin, TX","period":"2025-12-02"},{"date":"2025-08-28","form":"10-Q","company":"CrowdStrike Holdings, Inc.  (CRWD)  (CIK 0001535527)","location":"Austin, TX","period":"2025-07-31"},{"date":"2025-08-27","form":"8-K","company":"CrowdStrike Holdings, Inc.  (CRWD)  (CIK 0001535527)","location":"Austin, TX","period":"2025-08-27"},{"date":"2025-06-04","form":"10-Q","company":"CrowdStrike Holdings, Inc.  (CRWD)  (CIK 0001535527)","location":"Austin, TX","period":"2025-04-30"},{"date":"2025-06-03","form":"8-K","company":"CrowdStrike Holdings, Inc.  (CRWD)  (CIK 0001535527)","location":"Austin, TX","period":"2025-06-03"},{"date":"2025-05-07","form":"8-K","company":"CrowdStrike Holdings, Inc.  (CRWD)  (CIK 0001535527)","location":"Austin, TX","period":"2025-05-06"}],"Booz Allen":[{"date":"2025-10-24","form":"8-K","company":"Booz Allen Hamilton Holding Corp  (BAH)  (CIK 0001443646)","location":"Mclean, VA","period":"2025-10-24"},{"date":"2025-07-25","form":"8-K","company":"Booz Allen Hamilton Holding Corp  (BAH)  (CIK 0001443646)","location":"Mclean, VA","period":"2025-07-25"},{"date":"2025-07-25","form":"10-Q","company":"Booz Allen Hamilton Holding Corp  (BAH)  (CIK 0001443646)","location":"Mclean, VA","period":"2025-06-30"},{"date":"2025-06-04","form":"8-K","company":"Booz Allen Hamilton Holding Corp  (BAH)  (CIK 0001443646)","location":"Mclean, VA","period":"2025-06-02"},{"date":"2025-05-23","form":"10-K","company":"Booz Allen Hamilton Holding Corp  (BAH)  (CIK 0001443646)","location":"Mclean, VA","period":"2025-03-31"},{"date":"2025-05-23","form":"8-K","company":"Booz Allen Hamilton Holding Corp  (BAH)  (CIK 0001443646)","location":"Mclean, VA","period":"2025-05-23"},{"date":"2025-03-14","form":"8-K","company":"Booz Allen Hamilton Holding Corp  (BAH)  (CIK 0001443646)","location":"Mclean, VA","period":"2025-03-11"},{"date":"2025-03-07","form":"8-K","company":"Booz Allen Hamilton Holding Corp  (BAH)  (CIK 0001443646)","location":"Mclean, VA","period":"2025-03-07"}],"Northrop Grumman":[{"date":"2025-11-06","form":"8-K","company":"NORTHROP GRUMMAN CORP /DE/  (NOC)  (CIK 0001133421)","location":"Falls Church, VA","period":"2025-11-03"},{"date":"2025-10-21","form":"8-K","company":"NORTHROP GRUMMAN CORP /DE/  (NOC)  (CIK 0001133421)","location":"Falls Church, VA","period":"2025-10-21"},{"date":"2025-10-21","form":"10-Q","company":"NORTHROP GRUMMAN CORP /DE/  (NOC)  (CIK 0001133421)","location":"Falls Church, VA","period":"2025-09-30"},{"date":"2025-07-22","form":"8-K","company":"NORTHROP GRUMMAN CORP /DE/  (NOC)  (CIK 0001133421)","location":"Falls Church, VA","period":"2025-07-22"},{"date":"2025-07-22","form":"10-Q","company":"NORTHROP GRUMMAN CORP /DE/  (NOC)  (CIK 0001133421)","location":"Falls Church, VA","period":"2025-06-30"},{"date":"2025-04-22","form":"8-K","company":"NORTHROP GRUMMAN CORP /DE/  (NOC)  (CIK 0001133421)","location":"Falls Church, VA","period":"2025-04-22"},{"date":"2025-04-22","form":"10-Q","company":"NORTHROP GRUMMAN CORP /DE/  (NOC)  (CIK 0001133421)","location":"Falls Church, VA","period":"2025-03-31"},{"date":"2025-01-30","form":"8-K","company":"NORTHROP GRUMMAN CORP /DE/  (NOC)  (CIK 0001133421)","location":"Falls Church, VA","period":"2025-01-30"}],"L3Harris":[{"date":"2025-07-18","form":"8-K","company":"L3HARRIS TECHNOLOGIES, INC. /DE/  (LHX)  (CIK 0000202058)","location":"Melbourne, FL","period":"2025-07-17"},{"date":"2025-04-24","form":"10-Q","company":"L3HARRIS TECHNOLOGIES, INC. /DE/  (LHX)  (CIK 0000202058)","location":"Melbourne, FL","period":"2025-03-28"},{"date":"2025-02-21","form":"8-K","company":"L3HARRIS TECHNOLOGIES, INC. /DE/  (LHX)  (CIK 0000202058)","location":"Melbourne, FL","period":"2025-02-18"},{"date":"2025-02-14","form":"10-K","company":"L3HARRIS TECHNOLOGIES, INC. /DE/  (LHX)  (CIK 0000202058)","location":"Melbourne, FL","period":"2025-01-03"},{"date":"2024-10-25","form":"10-Q","company":"L3HARRIS TECHNOLOGIES, INC. /DE/  (LHX)  (CIK 0000202058)","location":"Melbourne, FL","period":"2024-09-27"},{"date":"2024-10-16","form":"8-K","company":"L3HARRIS TECHNOLOGIES, INC. /DE/  (LHX)  (CIK 0000202058)","location":"Melbourne, FL","period":"2024-10-15"},{"date":"2024-07-26","form":"10-Q","company":"L3HARRIS TECHNOLOGIES, INC. /DE/  (LHX)  (CIK 0000202058)","location":"Melbourne, FL","period":"2024-06-28"},{"date":"2024-02-20","form":"10-K","company":"L3HARRIS TECHNOLOGIES, INC. /DE/  (LHX)  (CIK 0000202058)","location":"Melbourne, FL","period":"2023-12-29"}],"Leidos":[{"date":"2025-11-04","form":"8-K","company":"Leidos Holdings, Inc.  (LDOS)  (CIK 0001336920)","location":"Reston, VA","period":"2025-11-04"},{"date":"2025-11-04","form":"10-Q","company":"Leidos Holdings, Inc.  (LDOS)  (CIK 0001336920)","location":"Reston, VA","period":"2025-10-03"},{"date":"2025-08-05","form":"8-K","company":"Leidos Holdings, Inc.  (LDOS)  (CIK 0001336920)","location":"Reston, VA","period":"2025-08-05"},{"date":"2025-08-05","form":"10-Q","company":"Leidos Holdings, Inc.  (LDOS)  (CIK 0001336920)","location":"Reston, VA","period":"2025-07-04"},{"date":"2025-05-15","form":"8-K","company":"Leidos Holdings, Inc.  (LDOS)  (CIK 0001336920)","location":"Reston, VA","period":"2025-05-15"},{"date":"2025-05-06","form":"8-K","company":"Leidos Holdings, Inc.  (LDOS)  (CIK 0001336920)","location":"Reston, VA","period":"2025-05-06"},{"date":"2025-05-06","form":"10-Q","company":"Leidos Holdings, Inc.  (LDOS)  (CIK 0001336920)","location":"Reston, VA","period":"2025-04-04"},{"date":"2025-02-25","form":"8-K","company":"Leidos Holdings, Inc.  (LDOS)  (CIK 0001336920)","location":"Reston, VA","period":"2025-02-20"}]};
+
+var SOURCES = {
+  contracts: {name:"USAspending.gov",icon:"\u{1F3DB}\uFE0F",color:"#22c55e",desc:"Federal government contract awards - real spending data"},
+  sec: {name:"SEC EDGAR",icon:"\u{1F4B0}",color:"#eab308",desc:"SEC filings - 10-K, 10-Q, 8-K corporate disclosures"},
+  patents: {name:"USPTO PatentsView",icon:"\u{1F4DC}",color:"#3b82f6",desc:"US patent database (live API call)"}
+};
+
+var SUGGESTIONS = ["Raytheon","Palantir","Lockheed Martin","Booz Allen","CrowdStrike","Northrop Grumman","L3Harris","Leidos","SAIC","BAE Systems"];
+
+var state = {
+  company: "",
+  tab: "contracts",
+  data: {contracts:null,sec:null,patents:null},
+  loading: {contracts:false,sec:false,patents:false},
+  errors: {contracts:null,sec:null,patents:null},
+  showCode: false,
+  showJson: false,
+  ai: {},
+  aiLoading: false
+};
+
+function fmt(n){
+  if(!n||isNaN(n)) return "$0";
+  var a=Math.abs(n);
+  if(a>=1e9) return "$"+(n/1e9).toFixed(1)+"B";
+  if(a>=1e6) return "$"+(n/1e6).toFixed(1)+"M";
+  if(a>=1e3) return "$"+(n/1e3).toFixed(0)+"K";
+  return "$"+n.toFixed(0);
+}
+
+// ═══ BUILD UI ═══
+function init(){
+  // Quick buttons
+  var qr = document.querySelector(".quick-row");
+  SUGGESTIONS.forEach(function(c){
+    var b = document.createElement("button");
+    b.className = "quick-btn";
+    b.textContent = c;
+    b.onclick = function(){ doSearch(c); };
+    qr.appendChild(b);
+  });
+  
+  // Search
+  document.getElementById("searchInput").addEventListener("keydown",function(e){
+    if(e.key==="Enter") fetchAll();
+  });
+  
+  renderTabs();
+  render();
+}
+
+function renderTabs(){
+  var bar = document.getElementById("tabBar");
+  bar.innerHTML = "";
+  Object.keys(SOURCES).forEach(function(k){
+    var v = SOURCES[k];
+    var b = document.createElement("button");
+    b.className = "tab" + (state.tab===k?" active":"");
+    b.style.color = state.tab===k ? v.color : "#4a5568";
+    b.style.borderBottomColor = state.tab===k ? v.color : "transparent";
+    var countHtml = "";
+    if(state.data[k] && state.data[k].length>0){
+      countHtml = ' <span class="count" style="background:'+v.color+'22;color:'+v.color+'">'+state.data[k].length+'</span>';
+    }
+    b.innerHTML = v.icon+" "+v.name+countHtml;
+    b.onclick = function(){ state.tab=k; state.showCode=false; state.showJson=false; renderTabs(); render(); };
+    bar.appendChild(b);
+  });
+}
+
+function render(){
+  var s = SOURCES[state.tab];
+  var d = state.data[state.tab];
+  var err = state.errors[state.tab];
+  var loading = state.loading[state.tab];
+  var html = "";
+  
+  // Status
+  var total = 0;
+  Object.values(state.data).forEach(function(v){ if(v) total+=v.length; });
+  var badge = document.getElementById("statusBadge");
+  if(total>0){ badge.style.display="inline"; badge.textContent=total+" results"; }
+  else { badge.style.display="none"; }
+  
+  // API bar
+  html += '<div class="api-bar"><div>';
+  html += '<span class="api-name" style="color:'+s.color+'">'+s.icon+' '+s.name+'</span>';
+  html += '<span class="api-badge">FREE</span>';
+  html += '<p class="api-desc">'+s.desc+'</p></div>';
+  html += '<div style="display:flex;gap:6px">';
+  html += '<button class="btn-sm '+(state.showCode?"active-code":"")+'" onclick="toggleCode()">\u{1F40D} Python</button>';
+  html += '<button class="btn-sm '+(state.showJson?"active-json":"")+'" onclick="toggleJson()">{ } JSON</button>';
+  html += '</div></div>';
+  
+  // Code panel
+  if(state.showCode){
+    html += '<div class="code-panel"><div class="code-title"><span>\u{1F40D} Python - copy and run locally</span>';
+    html += '<button class="code-copy" onclick="copyCode()">Copy</button></div>';
+    html += '<pre class="code-pre" id="codeBlock">'+getPython(state.tab)+'</pre></div>';
+  }
+  
+  // JSON panel
+  if(state.showJson && d){
+    html += '<div class="json-panel"><span class="json-title">Raw API response - '+d.length+' records</span>';
+    html += '<pre class="json-pre">'+JSON.stringify(d.slice(0,4),null,2)+'</pre></div>';
+  }
+  
+  // Error
+  if(err){
+    html += '<div class="error-box"><p style="font-size:11px;color:#fca5a5;font-weight:600">API Error: '+err+'</p>';
+    html += '<p style="font-size:9px;color:#9c5555;margin-top:4px">Some APIs may have CORS restrictions. Use the Python code to run from your machine.</p></div>';
+  }
+  
+  // Empty
+  if(!d && !loading && !err){
+    html += '<div class="empty"><div class="empty-icon">'+s.icon+'</div>';
+    html += '<p style="font-size:14px;color:#4a5568">Type a company name and click <b style="color:#718096">Fetch All</b></p>';
+    html += '<p style="font-size:11px;color:#2d3a5c;margin-top:6px">Real data from '+s.name+' will appear here</p></div>';
+  }
+  
+  // Loading
+  if(loading){
+    html += '<div class="loading"><p style="font-size:13px;color:'+s.color+'">\u23F3 Calling '+s.name+'...</p></div>';
+  }
+  
+  // Results
+  if(d && !loading){
+    if(d.length===0){
+      html += '<p style="text-align:center;color:#4a5568;padding:30px;font-size:12px">No results for "'+state.company+'". Try the full legal name.</p>';
+    }
+    
+    if(state.tab==="contracts"){
+      d.forEach(function(c){
+        html += '<div class="card"><div class="card-head">';
+        html += '<div><span class="mono text-xs" style="color:#22c55e;font-weight:600">'+c.id+'</span>';
+        html += ' <span class="text-xs text-muted">'+c.type+' - '+(c.start||"")+'</span></div>';
+        html += '<span class="amount" style="color:#22c55e">'+fmt(c.amount)+'</span></div>';
+        html += '<p class="text-sm text-light">\u{1F3DB}\uFE0F '+c.agency+(c.subAgency?' &gt; '+c.subAgency:'')+'</p>';
+        html += '<p class="text-xs text-muted" style="line-height:1.4;margin-top:2px">'+c.desc+'</p></div>';
+      });
+    }
+    
+    if(state.tab==="sec"){
+      d.forEach(function(f){
+        html += '<div class="card"><div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">';
+        html += '<span class="form-badge">'+f.form+'</span>';
+        html += '<span class="text-xs text-muted">'+f.date+'</span>';
+        if(f.period) html += '<span class="text-xs text-muted">Period: '+f.period+'</span>';
+        html += '</div>';
+        html += '<p class="text-base text-bright" style="font-weight:600">'+f.company+'</p>';
+        if(f.location) html += '<p class="text-xs text-muted">'+f.location+'</p>';
+        html += '</div>';
+      });
+    }
+    
+    if(state.tab==="patents"){
+      d.forEach(function(p){
+        html += '<div class="card"><div class="card-head">';
+        html += '<span class="mono text-xs" style="color:#3b82f6;font-weight:600">US'+p.id+' - '+p.cpc+' - '+p.date+'</span>';
+        var cColor = p.citedBy>20?"#ef4444":p.citedBy>5?"#eab308":"#718096";
+        html += '<span class="text-xs" style="color:'+cColor+'">Claims: '+p.claims+' - Cited: '+p.citedBy+'</span></div>';
+        html += '<h4 style="font-size:12px;font-weight:600;color:#edf2f7;margin-bottom:2px">'+p.title+'</h4>';
+        html += '<p class="text-xs" style="color:#718096">'+p.assignee+'</p>';
+        html += '<p class="text-xs text-muted" style="line-height:1.4;margin-top:2px">'+(p.abstract||"").slice(0,200)+'</p></div>';
+      });
+    }
+    
+    // AI button
+    if(d.length>0){
+      html += '<div class="ai-box"><div class="ai-head">';
+      html += '<span class="ai-title">\u{1F9E0} AI Intelligence Analysis</span>';
+      html += '<button class="btn-ai" onclick="runAI()" '+(state.aiLoading?'disabled':'')+'>'+
+        (state.aiLoading?'Analyzing...':'\u26A1 Analyze with Claude')+'</button></div>';
+      if(state.ai[state.tab]){
+        html += '<div class="ai-result"><pre class="ai-text">'+state.ai[state.tab]+'</pre></div>';
+      }
+      html += '</div>';
+    }
+  }
+  
+  document.getElementById("mainContent").innerHTML = html;
+}
+
+// ═══ DATA FETCHING ═══
+function doSearch(c){
+  document.getElementById("searchInput").value = c;
+  state.company = c;
+  fetchAll();
+}
+
+function fetchAll(){
+  state.company = document.getElementById("searchInput").value.trim();
+  if(!state.company) return;
+  
+  // Check preloaded first
+  if(PRELOADED_CONTRACTS[state.company]){
+    state.data.contracts = PRELOADED_CONTRACTS[state.company];
+    state.errors.contracts = null;
+  } else {
+    fetchContracts(state.company);
+  }
+  
+  if(PRELOADED_SEC[state.company]){
+    state.data.sec = PRELOADED_SEC[state.company];
+    state.errors.sec = null;
+  } else {
+    fetchSECLive(state.company);
+  }
+  
+  fetchPatentsLive(state.company);
+  
+  state.ai = {};
+  renderTabs();
+  render();
+}
+
+async function fetchContracts(q){
+  state.loading.contracts = true; state.errors.contracts = null; render();
+  try{
+    var r = await fetch("https://api.usaspending.gov/api/v2/search/spending_by_award/",{
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({filters:{recipient_search_text:[q],time_period:[{start_date:"2020-01-01",end_date:"2025-12-31"}],award_type_codes:["A","B","C","D"]},
+        fields:["Award ID","Recipient Name","Award Amount","Awarding Agency","Awarding Sub Agency","Award Type","Description","Start Date","End Date"],
+        limit:15,order:"desc",sort:"Award Amount",subawards:false,page:1})
+    });
+    var d = await r.json();
+    state.data.contracts = (d.results||[]).map(function(x){
+      return {id:x["Award ID"]||"N/A",recipient:x["Recipient Name"]||"",amount:x["Award Amount"]||0,
+        agency:x["Awarding Agency"]||"",subAgency:x["Awarding Sub Agency"]||"",type:x["Award Type"]||"",
+        desc:(x["Description"]||"").slice(0,200),start:x["Start Date"]||"",end:x["End Date"]||""};
+    });
+  }catch(e){ state.errors.contracts = e.message; }
+  state.loading.contracts = false; renderTabs(); render();
+}
+
+async function fetchPatentsLive(q){
+  state.loading.patents = true; state.errors.patents = null; render();
+  try{
+    var qObj = JSON.stringify({"_and":[{"_or":[{"assignees.assignee_organization":{"_contains":q}},{"patent_title":{"_contains":q}}]}]});
+    var fObj = JSON.stringify(["patent_id","patent_title","patent_date","patent_abstract","assignees.assignee_organization","cpcs.cpc_group_id","patent_num_cited_by_us_patents","patent_num_claims"]);
+    var sObj = JSON.stringify([{"patent_date":"desc"}]);
+    var oObj = JSON.stringify({"size":12});
+    var url = "https://search.patentsview.org/api/v1/patent/?q="+encodeURIComponent(qObj)+"&f="+encodeURIComponent(fObj)+"&s="+encodeURIComponent(sObj)+"&o="+encodeURIComponent(oObj);
+    var r = await fetch(url,{headers:{Accept:"application/json"}});
+    if(!r.ok) throw new Error("HTTP "+r.status);
+    var d = await r.json();
+    state.data.patents = (d.patents||[]).map(function(p){
+      return {id:p.patent_id,title:p.patent_title||"Untitled",date:p.patent_date||"",
+        abstract:p.patent_abstract||"",assignee:(p.assignees&&p.assignees[0]&&p.assignees[0].assignee_organization)||"",
+        cpc:(p.cpcs&&p.cpcs[0]&&p.cpcs[0].cpc_group_id)||"N/A",
+        citedBy:p.patent_num_cited_by_us_patents||0,claims:p.patent_num_claims||0};
+    });
+  }catch(e){ state.errors.patents = e.message; }
+  state.loading.patents = false; renderTabs(); render();
+}
+
+async function fetchSECLive(q){
+  state.loading.sec = true; state.errors.sec = null; render();
+  try{
+    var r = await fetch("https://efts.sec.gov/LATEST/search-index?q=%22"+encodeURIComponent(q)+"%22&dateRange=custom&startdt=2020-01-01&enddt=2025-12-31&forms=10-K,10-Q,8-K&from=0&size=12",
+      {headers:{"User-Agent":"CIcourse academic@university.edu"}});
+    if(!r.ok) throw new Error("HTTP "+r.status);
+    var d = await r.json();
+    state.data.sec = ((d.hits&&d.hits.hits)||[]).map(function(h){
+      var src = h._source||{};
+      return {date:src.file_date||"",form:src.form||"",company:(src.display_names&&src.display_names[0])||q,
+        location:(src.biz_locations&&src.biz_locations[0])||"",period:src.period_ending||""};
+    });
+  }catch(e){ state.errors.sec = e.message; }
+  state.loading.sec = false; renderTabs(); render();
+}
+
+// ═══ AI ANALYSIS ═══
+async function runAI(){
+  var d = state.data[state.tab];
+  if(!d||!d.length) return;
+  state.aiLoading = true; render();
+  try{
+    var r = await fetch("https://api.anthropic.com/v1/messages",{
+      method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:800,
+        system:"You are a competitive intelligence analyst. Analyze this "+SOURCES[state.tab].name+" data for "+state.company+". Give: 3 strategic signals (mark HIGH/MEDIUM/LOW), 1 blind spot, 1 recommendation. Be specific, cite data. Under 200 words.",
+        messages:[{role:"user",content:JSON.stringify(d.slice(0,6))}]})
+    });
+    var data = await r.json();
+    state.ai[state.tab] = (data.content&&data.content[0]&&data.content[0].text)||"Analysis unavailable";
+  }catch(e){ state.ai[state.tab] = "Error: "+e.message; }
+  state.aiLoading = false; render();
+}
+
+// ═══ CODE & TOGGLES ═══
+function toggleCode(){ state.showCode=!state.showCode; state.showJson=false; render(); }
+function toggleJson(){ state.showJson=!state.showJson; state.showCode=false; render(); }
+function copyCode(){
+  var el = document.getElementById("codeBlock");
+  if(el) navigator.clipboard.writeText(el.textContent);
+}
+
+function getPython(tab){
+  var q = state.company || "Raytheon";
+  if(tab==="contracts") return 'import requests\n\nresp = requests.post(\n    "https://api.usaspending.gov/api/v2/search/spending_by_award/",\n    json={\n        "filters": {\n            "recipient_search_text": ["'+q+'"],\n            "time_period": [{"start_date": "2020-01-01", "end_date": "2025-12-31"}],\n            "award_type_codes": ["A", "B", "C", "D"]\n        },\n        "fields": ["Award ID", "Recipient Name", "Award Amount",\n                   "Awarding Agency", "Description", "Start Date"],\n        "limit": 25, "order": "desc", "sort": "Award Amount"\n    }\n)\nfor a in resp.json()["results"][:5]:\n    print(f"${a[\'Award Amount\']:,.0f}  |  {a[\'Awarding Agency\']}")\n    print(f"  {a[\'Description\'][:80]}")';
+  if(tab==="patents") return 'import requests, json\n\nresp = requests.get(\n    "https://search.patentsview.org/api/v1/patent/",\n    params={\n        "q": json.dumps({"_and": [\n            {"assignees.assignee_organization": {"_contains": "'+q+'"}}\n        ]}),\n        "f": json.dumps(["patent_id", "patent_title", "patent_date",\n            "patent_abstract", "patent_num_cited_by_us_patents"]),\n        "s": json.dumps([{"patent_date": "desc"}]),\n        "o": json.dumps({"size": 25})\n    }\n)\nfor p in resp.json()["patents"][:5]:\n    print(f"US{p[\'patent_id\']}: {p[\'patent_title\']}")\n    print(f"  Cited by: {p[\'patent_num_cited_by_us_patents\']} patents")';
+  return 'import requests\n\nresp = requests.get(\n    "https://efts.sec.gov/LATEST/search-index",\n    params={\n        "q": \'"'+q+'"\'  ,\n        "forms": "10-K,10-Q,8-K",\n        "dateRange": "custom",\n        "startdt": "2020-01-01",\n        "enddt": "2025-12-31"\n    },\n    headers={"User-Agent": "CI_Course academic@uni.edu"}\n)\nfor f in resp.json()["hits"]["hits"][:5]:\n    s = f["_source"]\n    print(f"{s[\'form\']}  |  {s[\'file_date\']}")\n    print(f"  {s[\'display_names\'][0]}")';
+}
+
+init();
+</script>
+</body>
+</html>
