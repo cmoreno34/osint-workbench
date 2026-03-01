@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OSINT Intelligence Workbench — Defense Cybersecurity Case Study</title>
+<style>
+:root { --navy:#1F3864; --blue:#2E75B6; --lblue:#BDD7EE; --gold:#F4B942; --green:#70AD47; --red:#E74C3C; --bg:#F7F9FC; --card:#FFFFFF; --text:#2C3E50; --muted:#8896A4; }
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Segoe UI',system-ui,-apple-system,sans-serif; background:var(--bg); color:var(--text); line-height:1.5; }
+
+/* Header */
+.header { background:linear-gradient(135deg,var(--navy),#2B5797); color:white; padding:20px 32px; display:flex; align-items:center; gap:16px; box-shadow:0 2px 12px rgba(0,0,0,.15); }
+.header h1 { font-size:20px; font-weight:700; } .header .sub { font-size:12px; opacity:.7; }
+
+/* Tabs */
+.tabs { display:flex; gap:2px; background:var(--navy); padding:0 24px; overflow-x:auto; }
+.tab { padding:10px 18px; color:rgba(255,255,255,.6); font-size:13px; font-weight:600; cursor:pointer; border:none; background:none; white-space:nowrap; border-bottom:3px solid transparent; transition:.2s; }
+.tab:hover { color:rgba(255,255,255,.85); } .tab.active { color:white; border-bottom-color:var(--gold); }
+
+/* Panels */
+.panel { display:none; padding:24px; max-width:1200px; margin:0 auto; } .panel.active { display:block; }
+.card { background:var(--card); border-radius:10px; padding:20px; margin-bottom:16px; box-shadow:0 1px 4px rgba(0,0,0,.06); border:1px solid #E8EDF2; }
+h2 { color:var(--navy); font-size:18px; margin-bottom:12px; } h3 { color:var(--blue); font-size:15px; margin:12px 0 8px; } h4 { color:var(--navy); font-size:14px; margin:12px 0 6px; }
+
+/* Badges */
+.badge { display:inline-block; padding:2px 10px; border-radius:12px; font-size:11px; font-weight:600; }
+.badge-red { background:#FDE8E8; color:#C0392B; } .badge-orange { background:#FFF3CD; color:#856404; } .badge-green { background:#D4EDDA; color:#155724; } .badge-blue { background:#D6EAF8; color:#1A5276; } .badge-purple { background:#E8DAEF; color:#6C3483; }
+
+/* Tables */
+table { width:100%; border-collapse:collapse; font-size:13px; margin:8px 0; }
+th { background:var(--navy); color:white; padding:8px 12px; text-align:left; font-weight:600; font-size:12px; }
+td { padding:8px 12px; border-bottom:1px solid #EEF2F7; } tr:hover { background:#F8FAFD; }
+
+/* Forms */
+select, input[type=text], input[type=number] { padding:8px 12px; border:1px solid #D5DBDF; border-radius:6px; font-size:13px; }
+select { background:white; cursor:pointer; }
+button { padding:8px 20px; border-radius:6px; border:none; font-weight:600; font-size:13px; cursor:pointer; transition:.2s; }
+.btn-primary { background:var(--blue); color:white; } .btn-primary:hover { background:#245E9B; }
+.btn-navy { background:var(--navy); color:white; } .btn-navy:hover { background:#16304F; }
+.btn-green { background:var(--green); color:white; } .btn-green:hover { background:#5C9338; }
+.btn-gold { background:var(--gold); color:var(--navy); } .btn-gold:hover { background:#E5A82E; }
+
+/* Status messages */
+.status { font-size:11px; color:var(--muted); margin-top:8px; font-style:italic; }
+.warn-box { background:#FFF8E1; border:1px solid #FFE082; border-radius:8px; padding:16px; }
+.info-box { background:#E3F2FD; border:1px solid #90CAF9; border-radius:8px; padding:16px; font-size:13px; }
+.excel-box { background:#E8F5E9; border-left:4px solid var(--green); border-radius:0 8px 8px 0; padding:12px 16px; margin:10px 0; font-size:12px; }
+.claude-box { background:#F3E5F5; border-left:4px solid #9C27B0; border-radius:0 8px 8px 0; padding:12px 16px; margin:10px 0; font-size:12px; }
+
+/* Sliders */
+input[type=range] { width:100%; accent-color:var(--blue); }
+.slider-row { display:flex; align-items:center; gap:12px; margin:6px 0; }
+.slider-label { min-width:160px; font-size:13px; font-weight:500; }
+.slider-val { min-width:36px; text-align:center; font-weight:700; font-size:14px; }
+
+/* Responsive grid */
+.grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; }
+@media(max-width:768px) { .grid-2,.grid-3 { grid-template-columns:1fr; } }
+
+/* Bid model */
+.pwin-bar { height:28px; border-radius:6px; background:#EEF2F7; overflow:hidden; position:relative; margin:4px 0; }
+.pwin-fill { height:100%; border-radius:6px; transition:width .5s; }
+.pwin-text { position:absolute; right:8px; top:50%; transform:translateY(-50%); font-size:11px; font-weight:700; }
+
+/* Python box */
+pre { background:#1E2736; color:#E2E8F0; padding:16px; border-radius:8px; font-size:12px; overflow-x:auto; font-family:'Fira Code',monospace; line-height:1.6; }
+code { font-family:'Fira Code',monospace; }
+.copy-btn { position:absolute; top:8px; right:8px; background:rgba(255,255,255,.15); color:white; border:none; padding:4px 10px; border-radius:4px; font-size:11px; cursor:pointer; }
+.pre-wrap { position:relative; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>🔍 OSINT Intelligence Workbench</h1>
+    <div class="sub">Defense Cybersecurity Case Study — CyberShield Inc. vs. 5 Competitors</div>
+  </div>
+</div>
+
+<div class="tabs" id="tabBar">
+  <button class="tab active" onclick="showTab(0)">🎯 AMC Scores</button>
+  <button class="tab" onclick="showTab(1)">💡 Patents</button>
+  <button class="tab" onclick="showTab(2)">👥 LinkedIn</button>
+  <button class="tab" onclick="showTab(3)">📑 Contracts</button>
+  <button class="tab" onclick="showTab(4)">🔭 Pipeline</button>
+  <button class="tab" onclick="showTab(5)">💰 Bid Model</button>
+  <button class="tab" onclick="showTab(6)">🐍 Python</button>
+  <button class="tab" onclick="showTab(7)">📡 Sources</button>
+</div>
+
+<!-- ============== TAB 0: AMC SCORES ============== -->
+<div class="panel active" id="panel0">
+  <h2>🎯 AMC Competitor Assessment</h2>
+  <div class="info-box" style="margin-bottom:16px">
+    Rate each competitor on Awareness, Motivation, and Capability (1-10). Response Probability auto-calculates as the geometric mean.
+  </div>
+  <div class="claude-box">
+    <strong>🤖 Claude Prompt:</strong> <em>"I'm analyzing [Company] as a competitor for a $50M DoD CMMC cybersecurity contract. Based on the following data: [paste patent count, contract wins, LinkedIn headcount], score their Awareness, Motivation, and Capability on a 1-10 scale. Justify each score."</em>
+  </div>
+  <div class="excel-box">
+    <strong>📊 Excel:</strong> Enter scores in the <strong>AMC Dashboard</strong> sheet → cells B4:D8 (yellow input cells). Response Probability auto-calculates in column E.
+  </div>
+  <div id="amcContainer"></div>
+</div>
+
+<!-- ============== TAB 1: PATENTS ============== -->
+<div class="panel" id="panel1">
+  <h2>💡 Patent Landscape Analysis</h2>
+  <div class="info-box" style="margin-bottom:16px">
+    10 defense companies pre-loaded with realistic patent data. Select a company to view filing velocity, top technology areas, and recent patents.
+  </div>
+  <div class="claude-box">
+    <strong>🤖 Claude Prompt:</strong> <em>"Analyze these patent filings for [Company]: [paste table]. What technology themes emerge? How does filing velocity compare to industry average? What does this suggest about their R&D strategy for DoD cybersecurity?"</em>
+  </div>
+  <div class="excel-box">
+    <strong>📊 Excel:</strong> Log results in the <strong>Patent Tracker</strong> sheet → columns A-G. Calculate threat score in column H using the formula provided.
+  </div>
+  <div style="display:flex;gap:12px;align-items:center;margin-bottom:16px">
+    <select id="patentCompany" style="min-width:240px">
+      <option value="">— Select Company —</option>
+    </select>
+    <button class="btn-primary" onclick="searchPatents()">🔍 Retrieve Patents</button>
+  </div>
+  <div id="patentResults"></div>
+</div>
+
+<!-- ============== TAB 2: LINKEDIN ============== -->
+<div class="panel" id="panel2">
+  <h2>👥 LinkedIn Workforce Intelligence</h2>
+  <div class="info-box" style="margin-bottom:16px">
+    Track competitor headcount, growth rates, open positions, and security clearance levels — key signals for DoD capability assessment.
+  </div>
+  <div class="claude-box">
+    <strong>🤖 Claude Prompt:</strong> <em>"Based on these LinkedIn signals for [Company] — headcount: [X], 6-month growth: [Y%], open cybersecurity roles: [Z], cleared staff: [W%] — what does this indicate about their capacity to pursue DoD CMMC contracts? How does this affect their Capability score?"</em>
+  </div>
+  <div class="excel-box">
+    <strong>📊 Excel:</strong> Enter data in <strong>LinkedIn Signals</strong> sheet → headcount in column B, growth in C, open roles in D, cleared % in E.
+  </div>
+  <div id="linkedinTable"></div>
+</div>
+
+<!-- ============== TAB 3: CONTRACTS ============== -->
+<div class="panel" id="panel3">
+  <h2>📑 Federal Contract Intelligence</h2>
+  <div class="info-box" style="margin-bottom:16px">
+    USASpending.gov data showing FY24 federal contract awards by competitor. Tracks market share, incumbency, and contract velocity.
+  </div>
+  <div class="claude-box">
+    <strong>🤖 Claude Prompt:</strong> <em>"Here are the FY24 contract awards for 5 competitors: [paste table]. Who has the strongest incumbency position? Which company shows the most aggressive growth? How should this data inform our Awareness and Motivation scores?"</em>
+  </div>
+  <div class="excel-box">
+    <strong>📊 Excel:</strong> Enter contract values in <strong>Contract Intel</strong> sheet → columns B-E. Market share auto-calculates in column F.
+  </div>
+  <div id="contractTable"></div>
+</div>
+
+<!-- ============== TAB 4: PIPELINE ============== -->
+<div class="panel" id="panel4">
+  <h2>🔭 Opportunity Pipeline</h2>
+  <div class="info-box" style="margin-bottom:16px">
+    Active SAM.gov opportunities relevant to CyberShield's CMMC cybersecurity focus. Includes PWIN estimates based on AMC analysis.
+  </div>
+  <div class="claude-box">
+    <strong>🤖 Claude Prompt:</strong> <em>"Given these 5 opportunities and our AMC competitor scores, which 2 should CyberShield prioritize? Consider incumbency, contract value, timeline, and competitive intensity. Provide a bid/no-bid recommendation for each."</em>
+  </div>
+  <div class="excel-box">
+    <strong>📊 Excel:</strong> Transfer pipeline data to <strong>Contract Intel</strong> sheet → rows 20+ (Pipeline section). PWIN feeds into the Bid Model tab.
+  </div>
+  <div id="pipelineTable"></div>
+</div>
+
+<!-- ============== TAB 5: BID MODEL (NEW) ============== -->
+<div class="panel" id="panel5">
+  <h2>💰 ECOMO Bid/No-Bid Decision Model</h2>
+  <div class="info-box" style="margin-bottom:16px">
+    Integrates AMC scores with ECOMO (Exchange Value) methodology to calculate expected value for bid decisions. Follows the framework from TN01/TN02.
+  </div>
+  <div class="claude-box">
+    <strong>🤖 Claude Prompt:</strong> <em>"I need to do an ECOMO analysis for a $[X]M DoD contract opportunity. Our bid cost is $[Y]. Based on AMC analysis, the top competitor has response probability of [Z%]. Calculate the expected value under 3 scenarios: (1) We win uncontested, (2) Incumbent competes aggressively, (3) Multiple bidders. Use a 10% discount rate over 3 years."</em>
+  </div>
+  <div class="excel-box">
+    <strong>📊 Excel:</strong> This mirrors the <strong>ECOMO SOLUTION</strong> Excel template. Enter costs in cells F5-F7, income assumptions in cells F27-F34, and discount rate in cell D16.
+  </div>
+  
+  <div class="grid-2">
+    <div class="card">
+      <h3>Opportunity Selection</h3>
+      <select id="bidOpportunity" style="width:100%;margin:8px 0" onchange="updateBidModel()">
+        <option value="0">CMMC Assessment Platform — $48M</option>
+        <option value="1">Zero-Trust Architecture — $125M</option>
+        <option value="2">Threat Intelligence Fusion — $35M</option>
+        <option value="3">Cloud Security Migration — $78M</option>
+        <option value="4">Insider Threat Detection — $22M</option>
+      </select>
+      <h4>Bid Investment (Pursuit Cost)</h4>
+      <div class="slider-row">
+        <span class="slider-label">Proposal Cost ($K)</span>
+        <input type="range" id="bidProposalCost" min="50" max="500" value="150" oninput="updateBidModel()">
+        <span class="slider-val" id="bidProposalCostVal">150</span>
+      </div>
+      <div class="slider-row">
+        <span class="slider-label">BD/Capture ($K)</span>
+        <input type="range" id="bidBDCost" min="20" max="200" value="75" oninput="updateBidModel()">
+        <span class="slider-val" id="bidBDCostVal">75</span>
+      </div>
+      <h4>Win Probability (from AMC)</h4>
+      <div class="slider-row">
+        <span class="slider-label">Base PWIN</span>
+        <input type="range" id="bidPWIN" min="5" max="80" value="35" oninput="updateBidModel()">
+        <span class="slider-val" id="bidPWINVal">35%</span>
+      </div>
+      <div class="slider-row">
+        <span class="slider-label">Discount Rate</span>
+        <input type="range" id="bidDiscount" min="5" max="20" value="10" oninput="updateBidModel()">
+        <span class="slider-val" id="bidDiscountVal">10%</span>
+      </div>
+    </div>
+    <div class="card">
+      <h3>ECOMO Expected Value Calculation</h3>
+      <div id="bidResults"></div>
+    </div>
+  </div>
+  
+  <div class="card" style="margin-top:16px">
+    <h3>3-Scenario Analysis (ECOMO Framework)</h3>
+    <div id="scenarioTable"></div>
+  </div>
+  
+  <div class="card" style="margin-top:16px">
+    <h3>Bid/No-Bid Decision Matrix</h3>
+    <div id="bidDecision"></div>
+  </div>
+</div>
+
+<!-- ============== TAB 6: PYTHON ============== -->
+<div class="panel" id="panel6">
+  <h2>🐍 Python API Scripts</h2>
+  <div class="info-box" style="margin-bottom:16px">
+    Copy-paste scripts for direct API access. All three APIs (USPTO PatentsView, USASpending, SAM.gov) are free with no API key required.
+  </div>
+  <div class="claude-box">
+    <strong>🤖 Claude Prompt:</strong> <em>"Help me modify this Python script to also extract [specific field] from the USPTO API response. I want to track [metric] over time for the past 5 years."</em>
+  </div>
+  
+  <div style="margin-bottom:16px">
+    <button class="btn-primary" onclick="showScript('patent')" style="margin-right:6px">USPTO Patents</button>
+    <button class="btn-navy" onclick="showScript('contracts')" style="margin-right:6px">USASpending</button>
+    <button class="btn-green" onclick="showScript('sam')">SAM.gov</button>
+  </div>
+  <div id="scriptArea"></div>
+</div>
+
+<!-- ============== TAB 7: DATA SOURCES ============== -->
+<div class="panel" id="panel7">
+  <h2>📡 Data Source Reference</h2>
+  <div class="claude-box">
+    <strong>🤖 Claude Prompt:</strong> <em>"For a defense cybersecurity competitive intelligence project, rank these data sources by value-to-effort ratio. Which 3 would you prioritize for a small CI team with limited budget?"</em>
+  </div>
+  <div id="sourcesTable"></div>
+</div>
+
+<script>
+// ==================== TAB NAVIGATION ====================
+function showTab(i) {
+  document.querySelectorAll('.tab').forEach((t,j) => t.classList.toggle('active', j===i));
+  document.querySelectorAll('.panel').forEach((p,j) => p.classList.toggle('active', j===i));
+}
+
+// ==================== COMPETITOR DATA ====================
+const COMPETITORS = [
+  { name:'Palantir Technologies', ticker:'PLTR', headcount:3400, growth:12, openRoles:89, cleared:45, fy24:892, contracts:47, specialty:'AI/ML Analytics' },
+  { name:'Leidos', ticker:'LDOS', headcount:47000, growth:3, openRoles:320, cleared:72, fy24:4200, contracts:215, specialty:'IT Modernization' },
+  { name:'SAIC', ticker:'SAIC', headcount:26000, growth:2, openRoles:195, cleared:68, fy24:3100, contracts:178, specialty:'Systems Integration' },
+  { name:'ManTech International', ticker:'MANT', headcount:10500, growth:5, openRoles:142, cleared:78, fy24:1800, contracts:92, specialty:'Cyber Operations' },
+  { name:'CrowdStrike', ticker:'CRWD', headcount:8900, growth:18, openRoles:67, cleared:22, fy24:380, contracts:28, specialty:'Endpoint Security' }
+];
+
+// ==================== PATENT DATA (PRELOADED) ====================
+const PATENT_DB = {
+  'Palantir Technologies': { total:487, velocity:'HIGH', topCPC:['G06F 16/00','G06N 20/00','H04L 9/40','G06Q 50/26'], patents:[
+    {id:'US11,921,834',title:'Distributed Data Integration for Intelligence Workflows',date:'2024-03-05',cpc:'G06F 16/00',citations:24},
+    {id:'US11,886,492',title:'ML Pipeline for Anomaly Detection in Classified Networks',date:'2024-01-30',cpc:'G06N 20/00',citations:18},
+    {id:'US11,843,621',title:'Ontology-Based Knowledge Graph for Defense Analytics',date:'2023-12-12',cpc:'G06F 16/00',citations:31},
+    {id:'US11,799,844',title:'Zero-Trust Access Control for Multi-Domain Operations',date:'2023-10-24',cpc:'H04L 9/40',citations:15}
+  ]},
+  'Leidos': { total:312, velocity:'MEDIUM', topCPC:['H04L 63/14','G06F 21/57','H04L 9/32','G06Q 10/06'], patents:[
+    {id:'US11,902,318',title:'Automated Vulnerability Assessment Framework',date:'2024-02-13',cpc:'H04L 63/14',citations:12},
+    {id:'US11,867,741',title:'Federated Identity Management for IC Systems',date:'2024-01-09',cpc:'G06F 21/57',citations:9},
+    {id:'US11,831,654',title:'Secure Multi-Party Computation for Defense Analytics',date:'2023-11-28',cpc:'H04L 9/32',citations:14},
+    {id:'US11,789,092',title:'AI-Assisted Cyber Threat Prioritization Engine',date:'2023-10-03',cpc:'H04L 63/14',citations:22}
+  ]},
+  'SAIC': { total:198, velocity:'MEDIUM', topCPC:['G06F 9/455','H04L 41/12','G06Q 10/06','H04W 12/06'], patents:[
+    {id:'US11,915,246',title:'Cloud Migration Security Assessment Tool',date:'2024-02-27',cpc:'G06F 9/455',citations:8},
+    {id:'US11,876,893',title:'Network Orchestration for Multi-Cloud Defense',date:'2024-01-16',cpc:'H04L 41/12',citations:11},
+    {id:'US11,838,201',title:'Automated Configuration Compliance Checker',date:'2023-12-05',cpc:'G06F 9/455',citations:6},
+    {id:'US11,801,357',title:'Zero-Trust Software-Defined Perimeter',date:'2023-10-17',cpc:'H04W 12/06',citations:19}
+  ]},
+  'ManTech International': { total:89, velocity:'LOW', topCPC:['H04L 63/20','G06F 21/55','H04L 9/40','G06F 21/56'], patents:[
+    {id:'US11,888,645',title:'Insider Threat Behavioral Analytics Platform',date:'2024-01-22',cpc:'G06F 21/55',citations:7},
+    {id:'US11,845,978',title:'Secure Enclave for Classified Data Processing',date:'2023-12-14',cpc:'H04L 63/20',citations:5},
+    {id:'US11,812,436',title:'Automated Incident Response Playbook Engine',date:'2023-11-01',cpc:'G06F 21/56',citations:10},
+    {id:'US11,778,903',title:'Cross-Domain Solution with ML Classification',date:'2023-09-19',cpc:'H04L 9/40',citations:13}
+  ]},
+  'CrowdStrike': { total:623, velocity:'HIGH', topCPC:['G06F 21/56','H04L 63/14','G06N 20/00','G06F 21/55'], patents:[
+    {id:'US11,934,521',title:'Adversary Simulation Engine for Threat Hunting',date:'2024-03-19',cpc:'G06F 21/56',citations:35},
+    {id:'US11,897,066',title:'Kernel-Level Threat Detection with eBPF',date:'2024-02-06',cpc:'G06F 21/55',citations:28},
+    {id:'US11,856,324',title:'Cloud-Native Endpoint Detection Architecture',date:'2023-12-26',cpc:'H04L 63/14',citations:41},
+    {id:'US11,808,789',title:'AI Behavioral Graph for Lateral Movement Detection',date:'2023-10-10',cpc:'G06N 20/00',citations:33}
+  ]},
+  'Booz Allen Hamilton': { total:245, velocity:'MEDIUM', topCPC:['G06Q 50/26','G06N 20/00','H04L 63/14','G06F 21/57'], patents:[
+    {id:'US11,911,287',title:'AI-Driven Mission Assurance Platform',date:'2024-02-20',cpc:'G06Q 50/26',citations:16},
+    {id:'US11,872,134',title:'Federated Learning for Defense Applications',date:'2024-01-11',cpc:'G06N 20/00',citations:21},
+    {id:'US11,834,567',title:'Continuous ATO Monitoring Framework',date:'2023-11-30',cpc:'H04L 63/14',citations:12},
+    {id:'US11,795,423',title:'Digital Twin for Cyber Range Operations',date:'2023-10-08',cpc:'G06F 21/57',citations:18}
+  ]},
+  'Raytheon (RTX)': { total:1842, velocity:'HIGH', topCPC:['F41G 7/00','H04L 63/14','G01S 7/41','H04K 3/00'], patents:[
+    {id:'US11,928,654',title:'Electronic Warfare Cognitive Decision Engine',date:'2024-03-12',cpc:'H04K 3/00',citations:8},
+    {id:'US11,891,234',title:'Cyber-Physical System Resilience Monitor',date:'2024-02-01',cpc:'H04L 63/14',citations:14},
+    {id:'US11,847,891',title:'Radar Signal Processing with Deep Learning',date:'2023-12-18',cpc:'G01S 7/41',citations:25},
+    {id:'US11,803,567',title:'Autonomous Cyber Defense for Tactical Networks',date:'2023-10-19',cpc:'H04L 63/14',citations:11}
+  ]},
+  'L3Harris Technologies': { total:967, velocity:'HIGH', topCPC:['H04B 7/185','G01S 13/00','H04L 9/08','F41H 11/02'], patents:[
+    {id:'US11,919,456',title:'Resilient SATCOM Cybersecurity Architecture',date:'2024-02-25',cpc:'H04B 7/185',citations:9},
+    {id:'US11,879,321',title:'Quantum-Resistant Key Distribution for ISR',date:'2024-01-14',cpc:'H04L 9/08',citations:17},
+    {id:'US11,841,789',title:'Electronic Intelligence Processing Pipeline',date:'2023-12-08',cpc:'G01S 13/00',citations:13},
+    {id:'US11,798,654',title:'Secure Waveform Generation for EW Systems',date:'2023-10-06',cpc:'H04L 9/08',citations:20}
+  ]},
+  'Northrop Grumman': { total:1456, velocity:'HIGH', topCPC:['B64C 39/02','G06F 21/57','H04L 9/08','G01S 17/89'], patents:[
+    {id:'US11,925,789',title:'Autonomous Cyber Operations for Space Systems',date:'2024-03-08',cpc:'G06F 21/57',citations:22},
+    {id:'US11,884,567',title:'Stealth UAV Communication Security Protocol',date:'2024-01-27',cpc:'B64C 39/02',citations:16},
+    {id:'US11,849,234',title:'JADC2 Data Fusion Security Layer',date:'2023-12-20',cpc:'H04L 9/08',citations:29},
+    {id:'US11,806,891',title:'Quantum Computing for Cryptanalysis Defense',date:'2023-10-13',cpc:'H04L 9/08',citations:37}
+  ]},
+  'General Dynamics IT': { total:178, velocity:'LOW', topCPC:['H04L 63/08','G06F 21/62','G06Q 10/06','H04L 41/28'], patents:[
+    {id:'US11,908,123',title:'Enterprise Identity Governance for IC',date:'2024-02-15',cpc:'H04L 63/08',citations:6},
+    {id:'US11,864,567',title:'Secure Cloud Workload Protection Platform',date:'2024-01-04',cpc:'G06F 21/62',citations:8},
+    {id:'US11,827,891',title:'Automated Security Orchestration for GovCloud',date:'2023-11-22',cpc:'H04L 41/28',citations:11},
+    {id:'US11,782,345',title:'Continuous Monitoring Dashboard for FedRAMP',date:'2023-09-25',cpc:'G06Q 10/06',citations:4}
+  ]}
+};
+
+// ==================== OPPORTUNITY PIPELINE ====================
+const PIPELINE = [
+  { title:'CMMC Assessment & Compliance Platform', agency:'DoD CIO', value:48, type:'IDIQ', close:45, incumbent:'Leidos', pwin:35 },
+  { title:'Zero-Trust Architecture Implementation', agency:'DISA', value:125, type:'FFP', close:90, incumbent:'SAIC', pwin:20 },
+  { title:'Threat Intelligence Fusion Center', agency:'NSA/CSS', value:35, type:'T&M', close:30, incumbent:'ManTech', pwin:40 },
+  { title:'Cloud Security Migration (IL5/IL6)', agency:'USAF', value:78, type:'CPFF', close:60, incumbent:'Leidos', pwin:25 },
+  { title:'Insider Threat Detection System', agency:'DIA', value:22, type:'FFP', close:120, incumbent:'Palantir', pwin:45 }
+];
+
+// ==================== INIT ====================
+window.onload = function() { buildAMC(); buildPatentDropdown(); buildLinkedIn(); buildContracts(); buildPipeline(); buildBidModel(); showScript('patent'); buildSources(); };
+
+// ==================== AMC TAB ====================
+function buildAMC() {
+  let html = '<table><tr><th>Competitor</th><th>Awareness (1-10)</th><th>Motivation (1-10)</th><th>Capability (1-10)</th><th>Response Prob.</th></tr>';
+  COMPETITORS.forEach((c,i) => {
+    html += '<tr>';
+    html += '<td><strong>' + c.name + '</strong><br><span style="font-size:11px;color:var(--muted)">' + c.specialty + '</span></td>';
+    ['a','m','c'].forEach(d => {
+      let def = d==='a' ? 7 : d==='m' ? 6 : 7;
+      html += '<td><input type="range" min="1" max="10" value="' + def + '" id="amc_' + i + '_' + d + '" oninput="calcAMC(' + i + ')" style="width:100px"><span id="amc_' + i + '_' + d + '_v" style="margin-left:6px;font-weight:700">' + def + '</span></td>';
+    });
+    html += '<td id="amc_' + i + '_prob" style="font-weight:700;font-size:16px"></td>';
+    html += '</tr>';
+  });
+  html += '</table>';
+  document.getElementById('amcContainer').innerHTML = html;
+  COMPETITORS.forEach((_,i) => calcAMC(i));
+}
+
+function calcAMC(i) {
+  let a = +document.getElementById('amc_'+i+'_a').value;
+  let m = +document.getElementById('amc_'+i+'_m').value;
+  let c = +document.getElementById('amc_'+i+'_c').value;
+  document.getElementById('amc_'+i+'_a_v').textContent = a;
+  document.getElementById('amc_'+i+'_m_v').textContent = m;
+  document.getElementById('amc_'+i+'_c_v').textContent = c;
+  let prob = Math.round(Math.pow(a*m*c, 1/3) * 10);
+  prob = Math.min(prob, 95);
+  let el = document.getElementById('amc_'+i+'_prob');
+  el.textContent = prob + '%';
+  el.style.color = prob >= 70 ? 'var(--red)' : prob >= 40 ? 'var(--gold)' : 'var(--green)';
+}
+
+// ==================== PATENT TAB ====================
+function buildPatentDropdown() {
+  let sel = document.getElementById('patentCompany');
+  Object.keys(PATENT_DB).forEach(name => {
+    let opt = document.createElement('option'); opt.value = name; opt.textContent = name; sel.appendChild(opt);
+  });
+}
+
+function searchPatents() {
+  let company = document.getElementById('patentCompany').value;
+  let el = document.getElementById('patentResults');
+  if (!company) { el.innerHTML = '<div class="warn-box">Please select a company.</div>'; return; }
+
+  let match = PATENT_DB[company];
+  if (match) {
+    let html = '<div class="grid-3" style="margin-bottom:16px">';
+    html += '<div class="card" style="margin:0;text-align:center"><div style="font-size:28px;font-weight:800;color:var(--navy)">' + match.total + '</div><div style="font-size:12px;color:var(--muted)">Total Patents</div></div>';
+    let vClass = match.velocity === 'HIGH' ? 'badge-red' : match.velocity === 'MEDIUM' ? 'badge-orange' : 'badge-green';
+    html += '<div class="card" style="margin:0;text-align:center"><div><span class="badge ' + vClass + '">' + match.velocity + '</span></div><div style="font-size:12px;color:var(--muted);margin-top:4px">Filing Velocity</div></div>';
+    html += '<div class="card" style="margin:0;text-align:center"><div style="font-size:28px;font-weight:800;color:var(--blue)">' + match.patents.reduce((s,p)=>s+p.citations,0) + '</div><div style="font-size:12px;color:var(--muted)">Total Citations</div></div>';
+    html += '</div>';
+
+    html += '<h4 style="color:var(--navy);margin:12px 0 8px">Top Technology Areas (CPC Codes)</h4>';
+    match.topCPC.forEach(cpc => { html += '<span class="badge badge-blue" style="margin:2px 4px">' + cpc + '</span>'; });
+
+    html += '<h4 style="color:var(--navy);margin:16px 0 8px">Recent Patents</h4>';
+    html += '<table><tr><th>Patent ID</th><th>Title</th><th>Date</th><th>CPC</th><th>Citations</th></tr>';
+    match.patents.forEach(p => {
+      html += '<tr><td><a href="https://patents.google.com/patent/' + p.id.replace(/,/g,'') + '" target="_blank" style="color:var(--blue)">' + p.id + '</a></td><td>' + p.title + '</td><td>' + p.date + '</td><td><span class="badge badge-blue">' + p.cpc + '</span></td><td>' + p.citations + '</td></tr>';
+    });
+    html += '</table>';
+    html += '<p class="status">✅ Pre-loaded patent data (browser-safe). For full API access, use the 🐍 Python tab.</p>';
+    el.innerHTML = html;
+  } else {
+    let html = '<div class="warn-box">';
+    html += '<strong>⚠️ "' + company + '" is not in the pre-loaded dataset.</strong><br><br>';
+    html += 'The USPTO PatentsView API blocks browser requests (CORS). For this company, search patents directly:';
+    html += '<div style="margin-top:12px">';
+    html += '<a href="https://patents.google.com/?assignee=' + encodeURIComponent(company) + '&sort=new" target="_blank" style="display:inline-block;background:var(--blue);color:white;padding:8px 16px;border-radius:6px;text-decoration:none;font-weight:600;margin-right:8px">🔍 Search Google Patents →</a>';
+    html += '<a href="https://ppubs.uspto.gov/pubwebapp/" target="_blank" style="display:inline-block;background:var(--navy);color:white;padding:8px 16px;border-radius:6px;text-decoration:none;font-weight:600">🔍 USPTO Patent Search →</a>';
+    html += '</div>';
+    html += '<p style="margin-top:12px;font-size:12px;color:#666">Or use the <strong>🐍 Python Scripts</strong> tab for raw API access (works for any company).</p>';
+    html += '</div>';
+    el.innerHTML = html;
+  }
+}
+
+// ==================== LINKEDIN TAB ====================
+function buildLinkedIn() {
+  let html = '<table><tr><th>Company</th><th>Headcount</th><th>6mo Growth</th><th>Open Cyber Roles</th><th>Cleared Staff %</th><th>Signal</th></tr>';
+  COMPETITORS.forEach(c => {
+    let signal = c.growth > 10 ? 'EXPANDING' : c.growth > 4 ? 'STABLE' : 'FLAT';
+    let sClass = signal === 'EXPANDING' ? 'badge-red' : signal === 'STABLE' ? 'badge-orange' : 'badge-green';
+    html += '<tr><td><strong>' + c.name + '</strong></td>';
+    html += '<td>' + c.headcount.toLocaleString() + '</td>';
+    html += '<td>' + (c.growth > 0 ? '+' : '') + c.growth + '%</td>';
+    html += '<td>' + c.openRoles + '</td>';
+    html += '<td>' + c.cleared + '%</td>';
+    html += '<td><span class="badge ' + sClass + '">' + signal + '</span></td></tr>';
+  });
+  html += '</table>';
+  document.getElementById('linkedinTable').innerHTML = html;
+}
+
+// ==================== CONTRACTS TAB ====================
+function buildContracts() {
+  let totalMkt = COMPETITORS.reduce((s,c) => s + c.fy24, 0);
+  let html = '<table><tr><th>Company</th><th>FY24 Awards ($M)</th><th>Contracts</th><th>Market Share</th><th>Specialty</th></tr>';
+  COMPETITORS.forEach(c => {
+    let share = (c.fy24 / totalMkt * 100).toFixed(1);
+    html += '<tr><td><strong>' + c.name + '</strong></td>';
+    html += '<td>$' + c.fy24.toLocaleString() + 'M</td>';
+    html += '<td>' + c.contracts + '</td>';
+    html += '<td>' + share + '%</td>';
+    html += '<td><span class="badge badge-blue">' + c.specialty + '</span></td></tr>';
+  });
+  html += '</table>';
+  
+  html += '<h4 style="margin-top:16px">Market Share Visualization</h4><div style="margin:8px 0">';
+  COMPETITORS.forEach(c => {
+    let share = (c.fy24 / totalMkt * 100);
+    let colors = ['var(--blue)','var(--navy)','var(--green)','var(--gold)','var(--red)'];
+    html += '<div style="display:flex;align-items:center;gap:8px;margin:4px 0">';
+    html += '<span style="min-width:120px;font-size:12px;font-weight:500">' + c.ticker + '</span>';
+    html += '<div style="flex:1;height:20px;background:#EEF2F7;border-radius:4px;overflow:hidden">';
+    html += '<div style="width:' + share + '%;height:100%;background:' + colors[COMPETITORS.indexOf(c)] + ';border-radius:4px"></div></div>';
+    html += '<span style="min-width:50px;font-size:12px;font-weight:600">' + share.toFixed(1) + '%</span></div>';
+  });
+  html += '</div>';
+  document.getElementById('contractTable').innerHTML = html;
+}
+
+// ==================== PIPELINE TAB ====================
+function buildPipeline() {
+  let html = '<table><tr><th>Opportunity</th><th>Agency</th><th>Value</th><th>Type</th><th>Days to Close</th><th>Incumbent</th><th>Est. PWIN</th></tr>';
+  PIPELINE.forEach(p => {
+    let pwinColor = p.pwin >= 40 ? 'var(--green)' : p.pwin >= 25 ? 'var(--gold)' : 'var(--red)';
+    html += '<tr><td><strong>' + p.title + '</strong></td>';
+    html += '<td>' + p.agency + '</td>';
+    html += '<td>$' + p.value + 'M</td>';
+    html += '<td><span class="badge badge-purple">' + p.type + '</span></td>';
+    html += '<td>' + p.close + ' days</td>';
+    html += '<td>' + p.incumbent + '</td>';
+    html += '<td style="font-weight:700;color:' + pwinColor + '">' + p.pwin + '%</td></tr>';
+  });
+  html += '</table>';
+  document.getElementById('pipelineTable').innerHTML = html;
+}
+
+// ==================== BID MODEL TAB (NEW) ====================
+function buildBidModel() { updateBidModel(); }
+
+function updateBidModel() {
+  let idx = +document.getElementById('bidOpportunity').value;
+  let opp = PIPELINE[idx];
+  let proposalCost = +document.getElementById('bidProposalCost').value;
+  let bdCost = +document.getElementById('bidBDCost').value;
+  let pwin = +document.getElementById('bidPWIN').value;
+  let discount = +document.getElementById('bidDiscount').value;
+  
+  document.getElementById('bidProposalCostVal').textContent = proposalCost;
+  document.getElementById('bidBDCostVal').textContent = bdCost;
+  document.getElementById('bidPWINVal').textContent = pwin + '%';
+  document.getElementById('bidDiscountVal').textContent = discount + '%';
+  
+  let totalBidCost = (proposalCost + bdCost) * 1000;
+  let contractValue = opp.value * 1000000;
+  let margin = 0.12; // 12% profit margin typical for defense
+  let years = 3;
+  let r = discount / 100;
+  
+  // NPV of contract profit over 3 years
+  let annualProfit = contractValue * margin / years;
+  let npvProfit = 0;
+  for (let y = 1; y <= years; y++) { npvProfit += annualProfit / Math.pow(1 + r, y); }
+  
+  // Scenario analysis (ECOMO style)
+  let s1prob = pwin / 100 * 0.5; // Win uncontested (optimistic)
+  let s2prob = pwin / 100 * 0.35; // Win after competition
+  let s3prob = 1 - s1prob - s2prob; // Lose
+  
+  let s1value = npvProfit * 1.1; // Premium — uncontested
+  let s2value = npvProfit * 0.85; // Compressed margin — competitive
+  let s3value = -totalBidCost; // Loss — only bid cost
+  
+  let expectedValue = s1prob * s1value + s2prob * s2value + s3prob * s3value;
+  let roi = expectedValue / totalBidCost;
+  
+  // Results panel
+  let html = '<div style="margin-bottom:12px">';
+  html += '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #EEF2F7"><span>Contract Value:</span><strong>$' + (contractValue/1e6).toFixed(1) + 'M</strong></div>';
+  html += '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #EEF2F7"><span>Total Bid Investment:</span><strong>$' + (totalBidCost/1000).toFixed(0) + 'K</strong></div>';
+  html += '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #EEF2F7"><span>NPV of Contract Profit (3yr):</span><strong>$' + (npvProfit/1e6).toFixed(2) + 'M</strong></div>';
+  html += '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #EEF2F7"><span>PWIN (AMC-adjusted):</span><strong style="color:' + (pwin>=35?'var(--green)':'var(--red)') + '">' + pwin + '%</strong></div>';
+  html += '<div style="display:flex;justify-content:space-between;padding:12px 0;font-size:16px"><span>Expected Value (EV):</span><strong style="color:' + (expectedValue>0?'var(--green)':'var(--red)') + '">$' + (expectedValue/1000).toFixed(0) + 'K</strong></div>';
+  html += '<div style="display:flex;justify-content:space-between;padding:8px 0"><span>ROI on Bid Investment:</span><strong style="color:' + (roi>1?'var(--green)':'var(--red)') + '">' + (roi*100).toFixed(0) + '%</strong></div>';
+  html += '</div>';
+  document.getElementById('bidResults').innerHTML = html;
+  
+  // Scenario table
+  let shtml = '<table><tr><th>Scenario</th><th>Probability</th><th>Value ($K)</th><th>Weighted Value ($K)</th><th>Description</th></tr>';
+  shtml += '<tr><td><span class="badge badge-green">S1: Win Uncontested</span></td><td>' + (s1prob*100).toFixed(1) + '%</td><td>+$' + (s1value/1000).toFixed(0) + 'K</td><td style="color:var(--green);font-weight:700">+$' + (s1prob*s1value/1000).toFixed(0) + 'K</td><td>Weak competition, CyberShield wins at full margin</td></tr>';
+  shtml += '<tr><td><span class="badge badge-orange">S2: Win After Competition</span></td><td>' + (s2prob*100).toFixed(1) + '%</td><td>+$' + (s2value/1000).toFixed(0) + 'K</td><td style="color:var(--gold);font-weight:700">+$' + (s2prob*s2value/1000).toFixed(0) + 'K</td><td>Incumbent competes, margin compressed 15%</td></tr>';
+  shtml += '<tr><td><span class="badge badge-red">S3: Lose</span></td><td>' + (s3prob*100).toFixed(1) + '%</td><td>-$' + (totalBidCost/1000).toFixed(0) + 'K</td><td style="color:var(--red);font-weight:700">-$' + (s3prob*totalBidCost/1000).toFixed(0) + 'K</td><td>Lost bid — sunk pursuit costs only</td></tr>';
+  shtml += '<tr style="background:#F0F7FF;font-weight:700"><td>EXPECTED VALUE</td><td>100%</td><td></td><td style="color:' + (expectedValue>0?'var(--green)':'var(--red)') + '">$' + (expectedValue/1000).toFixed(0) + 'K</td><td>Probability-weighted NPV</td></tr>';
+  shtml += '</table>';
+  document.getElementById('scenarioTable').innerHTML = shtml;
+  
+  // Decision matrix
+  let decision = expectedValue > 0 && pwin >= 25 ? 'BID' : expectedValue > 0 && pwin < 25 ? 'CONDITIONAL BID' : 'NO BID';
+  let dColor = decision === 'BID' ? 'var(--green)' : decision === 'CONDITIONAL BID' ? 'var(--gold)' : 'var(--red)';
+  let dhtml = '<div style="text-align:center;padding:20px">';
+  dhtml += '<div style="font-size:36px;font-weight:800;color:' + dColor + ';margin-bottom:8px">' + (decision === 'BID' ? '✅' : decision === 'CONDITIONAL BID' ? '⚠️' : '❌') + ' ' + decision + '</div>';
+  dhtml += '<div style="font-size:14px;color:var(--muted)">';
+  if (decision === 'BID') dhtml += 'Positive expected value ($' + (expectedValue/1000).toFixed(0) + 'K) with acceptable PWIN (' + pwin + '%). Recommend full pursuit.';
+  else if (decision === 'CONDITIONAL BID') dhtml += 'Positive expected value but low PWIN (' + pwin + '%). Recommend teaming or reducing bid investment before committing.';
+  else dhtml += 'Negative expected value. Bid investment likely not recoverable at current PWIN. Consider teaming or pass.';
+  dhtml += '</div>';
+  dhtml += '<div style="margin-top:16px;font-size:12px;color:var(--muted)">Decision criteria: EV > 0 AND PWIN ≥ 25% → BID | EV > 0 AND PWIN < 25% → CONDITIONAL | EV < 0 → NO BID</div>';
+  dhtml += '</div>';
+  document.getElementById('bidDecision').innerHTML = dhtml;
+}
+
+// ==================== PYTHON SCRIPTS TAB ====================
+function showScript(type) {
+  let scripts = {
+    patent: '# USPTO PatentsView API \u2014 No API key required\n'
++ 'import requests, json\n\n'
++ 'COMPANY = "Palantir Technologies"  # Change this\n\n'
++ 'url = "https://api.patentsview.org/patents/query"\n'
++ 'params = {\n'
++ '    "q": json.dumps({"_and": [\n'
++ '        {"_contains": {"assignee_organization": COMPANY}},\n'
++ '        {"_gte": {"patent_date": "2022-01-01"}}\n'
++ '    ]}),\n'
++ '    "f": json.dumps([\n'
++ '        "patent_number", "patent_title", "patent_date",\n'
++ '        "assignee_organization", "cpc_group_id", "citedby_patent_number"\n'
++ '    ]),\n'
++ '    "o": json.dumps({"page": 1, "per_page": 25}),\n'
++ '    "s": json.dumps([{"patent_date": "desc"}])\n'
++ '}\n\n'
++ 'resp = requests.get(url, params=params)\n'
++ 'data = resp.json()\n\n'
++ 'print(f"Total patents found: {data.get(\'total_patent_count\', 0)}")\n'
++ 'for p in data.get(\'patents\', []):\n'
++ '    cpc = p.get(\'cpcs\', [{}])[0].get(\'cpc_group_id\', \'N/A\')\n'
++ '    cites = len(p.get(\'citedby_patents\', []))\n'
++ '    print(f"  {p[\'patent_number\']} | {p[\'patent_title\'][:60]} | {p[\'patent_date\']} | CPC: {cpc} | Cited: {cites}x")',
+
+    contracts: '# USASpending.gov API \u2014 No API key required\n'
++ 'import requests\n\n'
++ 'COMPANY = "PALANTIR"  # Partial match works\n\n'
++ 'url = "https://api.usaspending.gov/api/v2/search/spending_by_award/"\n'
++ 'payload = {\n'
++ '    "filters": {\n'
++ '        "recipient_search_text": [COMPANY],\n'
++ '        "time_period": [{"start_date": "2023-10-01", "end_date": "2024-09-30"}],\n'
++ '        "award_type_codes": ["A", "B", "C", "D"]\n'
++ '    },\n'
++ '    "fields": ["Award ID", "Recipient Name", "Award Amount",\n'
++ '               "Awarding Agency", "Start Date", "Description"],\n'
++ '    "page": 1, "limit": 25, "sort": "Award Amount", "order": "desc"\n'
++ '}\n\n'
++ 'resp = requests.post(url, json=payload)\n'
++ 'data = resp.json()\n\n'
++ 'total = sum(r.get(\'Award Amount\', 0) or 0 for r in data.get(\'results\', []))\n'
++ 'print(f"Total FY24 awards for {COMPANY}: \\${total:,.0f}")\n'
++ 'for r in data.get(\'results\', [])[:10]:\n'
++ '    print(f"  \\${r.get(\'Award Amount\',0):>12,.0f} | {r.get(\'Awarding Agency\',\'\')[:30]} | {r.get(\'Description\',\'\')[:50]}")',
+
+    sam: '# SAM.gov API \u2014 Requires free API key from api.sam.gov\n'
++ 'import requests\n\n'
++ 'API_KEY = "YOUR_API_KEY"  # Register free at api.sam.gov\n\n'
++ 'url = "https://api.sam.gov/opportunities/v2/search"\n'
++ 'params = {\n'
++ '    "api_key": API_KEY,\n'
++ '    "postedFrom": "01/01/2024",\n'
++ '    "postedTo": "12/31/2024",\n'
++ '    "keyword": "CMMC cybersecurity",\n'
++ '    "typeOfSetAside": "",\n'
++ '    "limit": 25, "offset": 0\n'
++ '}\n\n'
++ 'resp = requests.get(url, params=params)\n'
++ 'data = resp.json()\n\n'
++ 'for opp in data.get(\'opportunitiesData\', []):\n'
++ '    print(f"  {opp.get(\'noticeId\',\'\')}")\n'
++ '    print(f"    Title: {opp.get(\'title\',\'\')[:70]}")\n'
++ '    print(f"    Agency: {opp.get(\'fullParentPathName\',\'\')[:50]}")\n'
++ '    print(f"    Type: {opp.get(\'type\',\'\')}")\n'
++ '    print(f"    Posted: {opp.get(\'postedDate\',\'\')}")\n'
++ '    print(f"    Response: {opp.get(\'responseDeadLine\',\'\')}")\n'
++ '    print()'
+  };
+  
+  let el = document.getElementById('scriptArea');
+  el.innerHTML = '<div class="pre-wrap"><pre>' + scripts[type] + '</pre></div>';
+}
+
+// ==================== DATA SOURCES TAB ====================
+function buildSources() {
+  let sources = [
+    ['USPTO PatentsView','https://patentsview.org','Patent filings, CPC codes, citations','FREE','Weekly','API'],
+    ['Google Patents','https://patents.google.com','Full patent text, families, citations','FREE','Daily','Browser'],
+    ['USASpending.gov','https://usaspending.gov','Federal contract awards, amounts','FREE','Daily','API'],
+    ['SAM.gov','https://sam.gov','Active opportunities, RFPs','FREE (key req)','Daily','API'],
+    ['FPDS','https://fpds.gov','Federal procurement data system','FREE','Daily','Browser'],
+    ['GovWin (Deltek)','https://govwin.com','Opportunity intel, PWIN data','$$$','Real-time','Subscription'],
+    ['LinkedIn Sales Navigator','https://linkedin.com','Headcount, hiring, exec moves','$$','Daily','Manual/API'],
+    ['Glassdoor','https://glassdoor.com','Employee sentiment, salary data','FREE','Weekly','Browser'],
+    ['SEC EDGAR','https://sec.gov/edgar','10-K, 10-Q, proxy statements','FREE','Quarterly','API/Browser'],
+    ['Crunchbase','https://crunchbase.com','Funding, acquisitions, investors','$','Monthly','API'],
+    ['Orbital Insight','https://orbitalinsight.com','Satellite imagery analytics','$$$','Weekly','Subscription'],
+    ['Recorded Future','https://recordedfuture.com','Threat intelligence feeds','$$$','Real-time','Subscription']
+  ];
+  
+  let html = '<table><tr><th>Source</th><th>URL</th><th>Data Type</th><th>Cost</th><th>Frequency</th><th>Access</th></tr>';
+  sources.forEach(s => {
+    let costBadge = s[3] === 'FREE' ? 'badge-green' : s[3].includes('$$$') ? 'badge-red' : 'badge-orange';
+    html += '<tr><td><strong>' + s[0] + '</strong></td>';
+    html += '<td><a href="' + s[1] + '" target="_blank" style="color:var(--blue);font-size:12px">' + s[1].replace('https://','') + '</a></td>';
+    html += '<td style="font-size:12px">' + s[2] + '</td>';
+    html += '<td><span class="badge ' + costBadge + '">' + s[3] + '</span></td>';
+    html += '<td style="font-size:12px">' + s[4] + '</td>';
+    html += '<td><span class="badge badge-blue">' + s[5] + '</span></td></tr>';
+  });
+  html += '</table>';
+  document.getElementById('sourcesTable').innerHTML = html;
+}
+</script>
+</body>
+</html>
